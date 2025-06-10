@@ -120,7 +120,7 @@
                     </label>
                 </div>
 
-                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-accent transition-colors">
+                <button type="submit" id="sms-login-submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-accent transition-colors">
                     注册/登录
                 </button>
             </form>
@@ -152,7 +152,7 @@
                     </label>
                 </div>
 
-                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-accent transition-colors">
+                <button type="submit" id="password-login-submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-accent transition-colors">
                     登录
                 </button>
             </form>
@@ -190,6 +190,7 @@
                 扫码表示并同意
                 <a href="#" class="text-primary hover:underline">《帆课用户服务协议》</a>、
                 <a href="#" class="text-primary hover:underline">《隐私政策》</a>
+                demo测试可见：点击图片模拟扫码成功流程
             </p>
 
             <!-- 其他登录方式 -->
@@ -342,6 +343,10 @@
         const togglePasswordVisibilityBtn = document.getElementById('toggle-password-visibility');
         const passwordInput = document.getElementById('password-input');
 
+        // 新增：为两个登录表单的提交按钮添加ID
+        const smsLoginSubmitBtn = document.getElementById('sms-login-submit');
+        const passwordLoginSubmitBtn = document.getElementById('password-login-submit');
+
         // 新增：角色选择模态框及其按钮
         const roleSelectionModal = document.getElementById('role-selection-modal');
         const teacherRoleBtn = document.getElementById('teacher-role-btn');
@@ -455,6 +460,20 @@
         bindPasswordForm.addEventListener('submit', (e) => {
             e.preventDefault();
             bindAccountModal.classList.add('hidden');
+            roleSelectionModal.classList.remove('hidden');
+        });
+
+        // 新增：手机号登录表单的提交行为
+        smsLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            mainLoginContainer.classList.add('hidden');
+            roleSelectionModal.classList.remove('hidden');
+        });
+
+        // 新增：密码登录表单的提交行为
+        passwordLoginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            mainLoginContainer.classList.add('hidden');
             roleSelectionModal.classList.remove('hidden');
         });
 
