@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI作业批改原型 - 首页</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .start-class-button {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background-color: #10B981; /* Tailwind green-500 */
+            color: white;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 10;
+            cursor: pointer;
+        }
+        .course-card:hover .start-class-button {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 课程卡片右上角三点菜单按钮 */
+        .more-options-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background-color: rgba(255, 255, 255, 0.2); /* 半透明背景 */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #6B7280; /* 改为灰色 */
+            font-size: 0.875rem;
+            transition: background-color 0.2s ease;
+            z-index: 20; /* 确保在最上层 */
+        }
+        .more-options-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 下拉菜单样式 */
+        .more-options-dropdown {
+            position: absolute;
+            top: 40px; /* 位于按钮下方 */
+            right: 8px;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+            z-index: 20;
+            min-width: 100px;
+            color: #333;
+        }
+
+        .more-options-button:hover + .more-options-dropdown,
+        .more-options-dropdown:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #333;
+            white-space: nowrap; /* 防止文本换行 */
+        }
+        .dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="flex h-screen bg-gray-100">
+
+    <!-- 左侧导航栏 (Homepage) -->
+    <div class="w-64 bg-white shadow-md">
+        <div class="p-4 border-b">
+            <div class="flex items-center space-x-2">
+                <div class="bg-[#165DFF] text-white h-10 w-10 rounded-lg flex items-center justify-center">
+                    <i class="fa fa-book text-xl"></i>
+                </div>
+                <div class="flex items-end justify-between w-full">
+                    <h1 class="text-xl font-bold text-[#165DFF]">FineClass帆课</h1>
+                    <p class="text-xs text-gray-500">教师端</p>
+                </div>
+            </div>
+        </div>
+        <nav class="mt-4">
+            <!-- '我的课程' 导航高亮 -->
+            <a href="homepage.html" class="flex items-center py-2 px-4 bg-gray-200 text-gray-800 font-semibold">
+                <i class="fas fa-graduation-cap mr-3"></i>我的课程
+            </a>
+             <a href="#" id="start-class-nav" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-chalkboard-teacher mr-3"></i>开始上课
+            </a>
+            <a href="notification_page.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                 <i class="fas fa-bell mr-3"></i>通知
+            </a>
+            <!-- 其他可能的导航项 -->
+        </nav>
+    </div>
+
+    <!-- 右侧主面板 (Homepage) -->
+    <div class="flex-1 flex flex-col">
+        <!-- 面包屑导航 (Homepage) -->
+        <header class="bg-white shadow-sm p-4">
+            <div class="flex justify-between items-center">
+                <nav class="text-sm text-gray-500">
+                    <span class="font-semibold text-gray-700">我的课程</span>
+                </nav>
+                <div class="flex space-x-4">
+                    <button id="archive-courses-button" class="text-sm text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-archive mr-1"></i>归档课程
+                    </button>
+                    <button id="recycle-bin-button" class="text-sm text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-trash-alt mr-1"></i>回收站
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 (Homepage) -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            <!-- 课程模块排列 (上半部分) -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">我的课程</h2>
+                <!-- 第一页课程卡片 -->
+                <div class="flex items-center space-x-4 overflow-x-hidden pb-4 pr-2">
+                    <!-- 添加课程入口 -->
+                     <div class="flex-none w-24 h-40 border-2 border-dashed border-gray-400 rounded-lg flex flex-col items-center justify-center text-gray-600 cursor-pointer hover:border-blue-500 hover:text-blue-600">
+                          <i class="fas fa-plus-circle text-2xl mb-2"></i>
+                          <p class="text-sm">添加课程</p>
+                     </div>
+
+                    <!-- 课程卡片占位符 (只显示前三个) -->
+                    <div class="course-card flex-none w-60 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                        <div class="relative w-full h-32 bg-white p-4 flex flex-col justify-between">
+                             <!-- 课程名称和班级班号 -->
+                             <div class="course-info">
+                                 <p class="course-name text-gray-900 text-lg font-bold mb-1">高等数学A(下)</p>
+                                 <p class="class-code text-gray-500 text-sm">2022113-202216</p>
+                             </div>
+                             <!-- 人数按钮 -->
+                             <div class="absolute bottom-4 left-4 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+                                 143人
+                             </div>
+                             <!-- 开始上课按钮 -->
+                             <div class="start-class-button" data-course-name="高等数学A(下)" data-class-code="2022113-202216">
+                                 开始上课
+                             </div>
+
+                             <!-- 右上角更多选项按钮及下拉菜单 -->
+                             <div class="more-options-button">
+                                 <i class="fas fa-ellipsis-h"></i>
+                             </div>
+                             <div class="more-options-dropdown">
+                                 <div class="dropdown-item" data-action="archive">归档</div>
+                                 <div class="dropdown-item" data-action="edit" data-course-id="course-math-a">编辑</div>
+                                 <div class="dropdown-item" data-action="delete">删除</div>
+                             </div>
+                        </div>
+                         <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                            <div class="flex items-center justify-center space-x-2">
+                                <span class="text-sm text-gray-700">2025 春季学期</span>
+                                <span class="course-code text-blue-600 text-sm font-mono"></span>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="course-card flex-none w-60 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                        <div class="relative w-full h-32 bg-white p-4 flex flex-col justify-between">
+                             <!-- 课程名称和班级班号 -->
+                             <div class="course-info">
+                                 <p class="course-name text-gray-900 text-lg font-bold mb-1">线性代数</p>
+                                 <p class="class-code text-gray-500 text-sm">2022201-2022205</p>
+                             </div>
+                             <!-- 人数按钮 -->
+                             <div class="absolute bottom-4 left-4 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+                                 120人
+                             </div>
+                             <!-- 开始上课按钮 -->
+                             <div class="start-class-button" data-course-name="线性代数" data-class-code="2022201-2022205">
+                                 开始上课
+                             </div>
+
+                             <!-- 右上角更多选项按钮及下拉菜单 -->
+                             <div class="more-options-button">
+                                 <i class="fas fa-ellipsis-h"></i>
+                             </div>
+                             <div class="more-options-dropdown">
+                                 <div class="dropdown-item" data-action="archive">归档</div>
+                                 <div class="dropdown-item" data-action="edit" data-course-id="course-linear-algebra">编辑</div>
+                                 <div class="dropdown-item" data-action="delete">删除</div>
+                             </div>
+                        </div>
+                         <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                            <div class="flex items-center justify-center space-x-2">
+                                <span class="text-sm text-gray-700">2025 春季学期</span>
+                                <span class="course-code text-blue-600 text-sm font-mono"></span>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="course-card flex-none w-60 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                        <div class="relative w-full h-32 bg-white p-4 flex flex-col justify-between">
+                             <!-- 课程名称和班级班号 -->
+                             <div class="course-info">
+                                 <p class="course-name text-gray-900 text-lg font-bold mb-1">Python编程</p>
+                                 <p class="class-code text-gray-500 text-sm">2022301-2022308</p>
+                             </div>
+                             <!-- 人数按钮 -->
+                             <div class="absolute bottom-4 left-4 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+                                 155人
+                             </div>
+                             <!-- 开始上课按钮 -->
+                             <div class="start-class-button" data-course-name="Python编程" data-class-code="2022301-2022308">
+                                 开始上课
+                             </div>
+
+                             <!-- 右上角更多选项按钮及下拉菜单 -->
+                             <div class="more-options-button">
+                                 <i class="fas fa-ellipsis-h"></i>
+                             </div>
+                             <div class="more-options-dropdown">
+                                 <div class="dropdown-item" data-action="archive">归档</div>
+                                 <div class="dropdown-item" data-action="edit" data-course-id="course-python">编辑</div>
+                                 <div class="dropdown-item" data-action="delete">删除</div>
+                             </div>
+                        </div>
+                         <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                            <div class="flex items-center justify-center space-x-2">
+                                <span class="text-sm text-gray-700">2025 春季学期</span>
+                                <span class="course-code text-blue-600 text-sm font-mono"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 添加第四个课程卡片 -->
+                    <div class="course-card flex-none w-60 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                        <div class="relative w-full h-32 bg-white p-4 flex flex-col justify-between">
+                             <!-- 课程名称和班级班号 -->
+                             <div class="course-info">
+                                 <p class="course-name text-gray-900 text-lg font-bold mb-1">数据结构</p>
+                                 <p class="class-code text-gray-500 text-sm">2022401-2022405</p>
+                             </div>
+                             <!-- 人数按钮 -->
+                             <div class="absolute bottom-4 left-4 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+                                 98人
+                             </div>
+                             <!-- 开始上课按钮 -->
+                             <div class="start-class-button" data-course-name="数据结构" data-class-code="2022401-2022405">
+                                 开始上课
+                             </div>
+
+                             <!-- 右上角更多选项按钮及下拉菜单 -->
+                             <div class="more-options-button">
+                                 <i class="fas fa-ellipsis-h"></i>
+                             </div>
+                             <div class="more-options-dropdown">
+                                 <div class="dropdown-item" data-action="archive">归档</div>
+                                 <div class="dropdown-item" data-action="edit" data-course-id="course-data-structure">编辑</div>
+                                 <div class="dropdown-item" data-action="delete">删除</div>
+                             </div>
+                        </div>
+                         <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                            <div class="flex items-center justify-center space-x-2">
+                                <span class="text-sm text-gray-700">2025 春季学期</span>
+                                <span class="course-code text-blue-600 text-sm font-mono"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 更多课程按钮 -->
+                     <div id="next-course-page" class="flex-none w-12 flex items-center justify-center cursor-pointer" title="点击查看更多课程">
+                         <i class="fas fa-chevron-circle-right text-gray-500 text-2xl hover:text-gray-700"></i>
+                     </div>
+                </div>
+
+                <!-- 隐藏的课程卡片 -->
+                <div id="hidden-courses" class="hidden">
+                    <div class="flex items-center space-x-4 overflow-x-hidden pb-4 pr-2">
+                        <!-- 返回箭头 -->
+                        <div id="prev-course-page" class="flex-none w-12 flex items-center justify-center cursor-pointer" title="返回上一页">
+                            <i class="fas fa-chevron-circle-left text-gray-500 text-2xl hover:text-gray-700"></i>
+                        </div>
+                        <!-- 更多课程卡片 -->
+                        <div class="course-card flex-none w-60 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                            <div class="relative w-full h-32 bg-white p-4 flex flex-col justify-between">
+                                 <!-- 课程名称和班级班号 -->
+                                 <div class="course-info">
+                                     <p class="course-name text-gray-900 text-lg font-bold mb-1">操作系统</p>
+                                     <p class="class-code text-gray-500 text-sm">2022501-2022506</p>
+                                 </div>
+                                 <!-- 人数按钮 -->
+                                 <div class="absolute bottom-4 left-4 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+                                     112人
+                                 </div>
+                                 <!-- 开始上课按钮 -->
+                                 <div class="start-class-button" data-course-name="操作系统" data-class-code="2022501-2022506">
+                                     开始上课
+                                 </div>
+
+                                 <!-- 右上角更多选项按钮及下拉菜单 -->
+                                 <div class="more-options-button">
+                                     <i class="fas fa-ellipsis-h"></i>
+                                 </div>
+                                 <div class="more-options-dropdown">
+                                     <div class="dropdown-item" data-action="archive">归档</div>
+                                     <div class="dropdown-item" data-action="edit" data-course-id="course-os">编辑</div>
+                                     <div class="dropdown-item" data-action="delete">删除</div>
+                                 </div>
+                            </div>
+                             <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <span class="text-sm text-gray-700">2025 春季学期</span>
+                                    <span class="course-code text-blue-600 text-sm font-mono"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="course-card flex-none w-60 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                            <div class="relative w-full h-32 bg-white p-4 flex flex-col justify-between">
+                                 <!-- 课程名称和班级班号 -->
+                                 <div class="course-info">
+                                     <p class="course-name text-gray-900 text-lg font-bold mb-1">计算机网络</p>
+                                     <p class="class-code text-gray-500 text-sm">2022601-2022608</p>
+                                 </div>
+                                 <!-- 人数按钮 -->
+                                 <div class="absolute bottom-4 left-4 bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">
+                                     135人
+                                 </div>
+                                 <!-- 开始上课按钮 -->
+                                 <div class="start-class-button" data-course-name="计算机网络" data-class-code="2022601-2022608">
+                                     开始上课
+                                 </div>
+
+                                 <!-- 右上角更多选项按钮及下拉菜单 -->
+                                 <div class="more-options-button">
+                                     <i class="fas fa-ellipsis-h"></i>
+                                 </div>
+                                 <div class="more-options-dropdown">
+                                     <div class="dropdown-item" data-action="archive">归档</div>
+                                     <div class="dropdown-item" data-action="edit" data-course-id="course-network">编辑</div>
+                                     <div class="dropdown-item" data-action="delete">删除</div>
+                                 </div>
+                            </div>
+                             <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <span class="text-sm text-gray-700">2025 春季学期</span>
+                                    <span class="course-code text-blue-600 text-sm font-mono"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 作业模块排列 (下半部分) -->
+            <div>
+                <h2 class="text-xl font-semibold mb-4">我的作业</h2>
+                <div id="my-assignments-list" class="bg-white rounded-lg shadow-md p-4">
+                    <!-- 作业列表占位符 -->
+                    <!-- 待批改作业 (优先级最高) -->
+                    <div class="flex items-center justify-between border-b pb-3 mb-3">
+                         <div class="flex-1 mr-4">
+                            <p class="text-gray-800 font-semibold">线性代数——第一周作业</p>
+                            <p class="text-sm text-gray-600">发布日期: 2023-10-28 | 截止日期: 2023-11-05</p>
+                         </div>
+                         <!-- 已提交/总人数 -->
+                         <span class="text-sm text-gray-600 mr-4">50/64</span>
+                         <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold mr-4 px-2.5 py-0.5 rounded">待批改</span>
+                         <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">
+                             进入批改
+                         </button>
+                    </div>
+                    <!-- 已批改作业 -->
+                    <div class="flex items-center justify-between border-b pb-3 mb-3">
+                        <div class="flex-1 mr-4">
+                            <p class="text-gray-800 font-semibold">高等数学 A（下）——第一周作业</p>
+                            <p class="text-sm text-gray-600">发布日期: 2023-10-20 | 截止日期: 2023-10-27</p>
+                        </div>
+                         <!-- 已提交/总人数 -->
+                         <span class="text-sm text-gray-600 mr-4">64/64</span>
+                         <span class="bg-green-100 text-green-800 text-xs font-semibold mr-4 px-2.5 py-0.5 rounded">已批改</span>
+                         <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-3 rounded text-sm">
+                                 查看反馈
+                             </button>
+                        </div>
+                         <!-- 未截止作业 (按发布时间倒序，这里是示例) -->
+                         <div class="flex items-center justify-between border-b pb-3 mb-3">
+                             <div class="flex-1 mr-4">
+                                 <p class="text-gray-800 font-semibold">高等数学 A（下）——第二周作业</p>
+                                 <p class="text-sm text-gray-600">发布日期: 2023-10-25 | 截止日期: 2023-11-10</p>
+                             </div>
+                             <!-- 已提交/总人数 -->
+                             <span class="text-sm text-gray-600 mr-4">45/64</span>
+                             <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-4 px-2.5 py-0.5 rounded">未截止</span>
+                             <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">
+                                 进入批改
+                             </button>
+                         </div>
+                         <div class="flex items-center justify-between pb-1">
+                             <div class="flex-1 mr-4">
+                                <p class="text-gray-800 font-semibold">Python编程——第一周作业</p>
+                                 <p class="text-sm text-gray-600">发布日期: 2023-10-24 | 截止日期: 2023-11-08</p>
+                             </div>
+                             <!-- 已提交/总人数 -->
+                             <span class="text-sm text-gray-600 mr-4">55/155</span>
+                             <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-4 px-2.5 py-0.5 rounded">未截止</span>
+                             <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">
+                                 进入批改
+                             </button>
+                         </div>
+
+                        <!-- 更多作业 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 创建课程弹窗 -->
+    <div id="create-course-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">创建新课程</h3>
+                <button id="close-create-course-modal" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="create-course-form" class="space-y-4">
+                <div>
+                    <label for="course-name" class="block text-sm font-medium text-gray-700">课程名称</label>
+                    <input type="text" id="course-name" name="course-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="course-class" class="block text-sm font-medium text-gray-700">班级班号</label>
+                    <input type="text" id="course-class" name="course-class" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="course-semester" class="block text-sm font-medium text-gray-700">学期</label>
+                    <select id="course-semester" name="course-semester" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="24-25-spring">2025 春季学期</option>
+                        <option value="24-25-fall">2024 秋季学期</option>
+                        <option value="23-24-spring">2023 春季学期</option>
+                        <option value="23-24-fall">2024 秋季学期</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="import-courseware" class="block text-sm font-medium text-gray-700">导入其他课程资料</label>
+                    <select id="import-courseware" name="import-courseware" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option style="font-size: 0.75rem;" value="">不导入</option>
+                        <option style="font-size: 0.75rem;" value="1">高等数学A(下) - 2022113-202216</option>
+                        <option style="font-size: 0.75rem;" value="2">线性代数 - 2022201-2022205</option>
+                        <option style="font-size: 0.75rem;" value="3">Python编程 - 2022301-2022308</option>
+                        <option style="font-size: 0.75rem;" value="4">数据结构 - 2022401-2022405</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" id="cancel-create-course" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md">
+                        取消
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md">
+                        创建
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 配置课程弹窗 -->
+    <div id="configure-class-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">配置课程</h3>
+                <button id="close-configure-class-modal" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="configure-class-form" class="space-y-4">
+                <div>
+                    <label for="class-select" class="block text-sm font-medium text-gray-700">课程班级</label>
+                    <select id="class-select" name="class-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">请选择课程班级</option>
+                        <option value="course1-class1">高等数学A(下) - 2023级1班</option>
+                        <option value="course2-class2">线性代数 - 2023级2班</option>
+                        <option value="course3-class3">Python编程 - 2023级3班</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="courseware-select" class="block text-sm font-medium text-gray-700">选择课程课件</label>
+                    <select id="courseware-select" name="courseware-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">不选择</option>
+                        <option value="courseware1">高数课件 - 第一章</option>
+                        <option value="courseware2">线代课件 - 第二章</option>
+                        <option value="courseware3">Python课件 - 第三章</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="class-title" class="block text-sm font-medium text-gray-700">标题</label>
+                    <input type="text" id="class-title" name="class-title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md">
+                        开始上课
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑班级信息弹窗 -->
+    <div id="edit-class-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">编辑班级信息</h3>
+                <button id="close-edit-class-modal" class="text-blue-500 hover:text-blue-700 text-sm" type="button">
+                    取消
+                </button>
+            </div>
+            <form id="edit-class-form" class="space-y-4">
+                <div>
+                    <label for="edit-class-name" class="block text-sm font-medium text-gray-700">课程名称 <span class="text-red-500">必填</span></label>
+                    <input type="text" id="edit-class-name" name="class-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" maxlength="28">
+                </div>
+                <div>
+                    <label for="edit-class-nickname" class="block text-sm font-medium text-gray-700">班级 <span class="text-gray-500">选项</span></label>
+                    <input type="text" id="edit-class-nickname" name="class-nickname" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" maxlength="16">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">开学学期</label>
+                    <div class="flex space-x-2 mt-1">
+                        <select id="edit-start-year" name="start-year" class="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></select>
+                        <span class="text-gray-700 flex items-center">年</span>
+                        <select id="edit-start-semester" name="start-semester" class="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="春">春</option>
+                            <option value="秋">秋</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-6">
+                    <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md">
+                        确认
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 归档提示弹窗 -->
+    <div id="archive-prompt-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96 max-w-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">提示</h3>
+            <p class="text-gray-700 mb-6">
+                归档后在首页不可见，你可以在"我的归档"中找到被归档的课程。
+            </p>
+            <div class="flex justify-center space-x-4">
+                <button type="button" id="confirm-archive-button" class="px-6 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md">
+                    确认
+                </button>
+                <button type="button" id="cancel-archive-button" class="px-6 py-2 text-sm font-medium text-blue-500 border border-blue-500 hover:bg-blue-50 rounded-md">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除课程确认弹窗 -->
+    <div id="delete-course-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96 max-w-sm text-center">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">确认删除</h3>
+            <p class="text-gray-700 mb-6">
+                删除后，所有课程数据（课件、学生记录、作业等）将被移入回收站，7 日后彻底删除且不可恢复。确认删除？
+            </p>
+            <div class="flex justify-center space-x-4">
+                <button type="button" id="confirm-delete-button" class="px-6 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-md">
+                    确认删除
+                </button>
+                <button type="button" id="cancel-delete-button" class="px-6 py-2 text-sm font-medium text-gray-500 border border-gray-300 hover:bg-gray-50 rounded-md">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 归档列表弹窗 -->
+    <div id="archive-list-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-[800px] max-w-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">归档</h3>
+                <button id="close-archive-list-modal" class="text-gray-500 hover:text-gray-700 text-sm">
+                    取消
+                </button>
+            </div>
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <a href="#" id="taught-tab" class="whitespace-nowrap py-3 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600" aria-current="page">
+                        我教的课 (2)
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 我教的课内容 -->
+            <div id="taught-courses-content" class="space-y-4">
+                <!-- 2025春季学期 -->
+                <div class="semester-group">
+                    <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg cursor-pointer semester-header">
+                        <div class="flex items-center">
+                            <i class="fas fa-chevron-down mr-2 text-gray-600"></i>
+                            <span class="font-semibold text-gray-800">2025春季学期</span>
+                        </div>
+                        <span class="text-sm text-gray-600">2门课程</span>
+                    </div>
+                    <div class="semester-content pl-8 mt-2 space-y-3">
+                        <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                            <div class="flex-1">
+                                <p class="text-lg font-bold text-gray-900 mb-1">高等数学A(下)</p>
+                                <p class="text-sm text-gray-600">2023春-[2022215114-2022215118]</p>
+                            </div>
+                            <div class="text-sm text-gray-700 mr-4">97人</div>
+                            <div class="text-sm text-gray-500 mr-4">无教学活动</div>
+                            <button class="text-blue-500 hover:text-blue-700 font-medium text-sm px-4 py-2 rounded-md remove-button">
+                                移出至首页
+                            </button>
+                        </div>
+                        <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                            <div class="flex-1">
+                                <p class="text-lg font-bold text-gray-900 mb-1">大学物理C</p>
+                                <p class="text-sm text-gray-600">2023春-[2022215114-2022215118]</p>
+                            </div>
+                            <div class="text-sm text-gray-700 mr-4">91人</div>
+                            <div class="text-sm text-gray-500 mr-4">无教学活动</div>
+                            <button class="text-blue-500 hover:text-blue-700 font-medium text-sm px-4 py-2 rounded-md remove-button">
+                                移出至首页
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2024秋季学期 -->
+                <div class="semester-group">
+                    <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg cursor-pointer semester-header">
+                        <div class="flex items-center">
+                            <i class="fas fa-chevron-right mr-2 text-gray-600"></i>
+                            <span class="font-semibold text-gray-800">2024秋季学期</span>
+                        </div>
+                        <span class="text-sm text-gray-600">1门课程</span>
+                    </div>
+                    <div class="semester-content hidden pl-8 mt-2 space-y-3">
+                        <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                            <div class="flex-1">
+                                <p class="text-lg font-bold text-gray-900 mb-1">数据结构</p>
+                                <p class="text-sm text-gray-600">2023秋-[2022215114-2022215118]</p>
+                            </div>
+                            <div class="text-sm text-gray-700 mr-4">85人</div>
+                            <div class="text-sm text-gray-500 mr-4">无教学活动</div>
+                            <button class="text-blue-500 hover:text-blue-700 font-medium text-sm px-4 py-2 rounded-md remove-button">
+                                移出至首页
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 回收站弹窗 -->
+    <div id="recycle-bin-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-[800px] max-w-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-900">回收站</h3>
+                <button id="close-recycle-bin-modal" class="text-gray-500 hover:text-gray-700 text-sm">
+                    关闭
+                </button>
+            </div>
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <a href="#" id="deleted-courses-tab" class="whitespace-nowrap py-3 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600" aria-current="page">
+                        已删除课程 (3)
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 已删除课程内容 -->
+            <div id="deleted-courses-content" class="space-y-4">
+                <!-- 2025春季学期 -->
+                <div class="semester-group">
+                    <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg cursor-pointer semester-header">
+                        <div class="flex items-center">
+                            <i class="fas fa-chevron-down mr-2 text-gray-600"></i>
+                            <span class="font-semibold text-gray-800">2025春季学期</span>
+                        </div>
+                        <span class="text-sm text-gray-600">2门课程</span>
+                    </div>
+                    <div class="semester-content pl-8 mt-2 space-y-3">
+                        <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                            <div class="flex-1">
+                                <p class="text-lg font-bold text-gray-900 mb-1">高等数学A(下)</p>
+                                <p class="text-sm text-gray-600">2023春-[2022215114-2022215118]</p>
+                            </div>
+                            <div class="text-sm text-gray-700 mr-4">97人</div>
+                            <div class="text-sm text-gray-500 mr-4">剩余4天</div>
+                            <div class="flex space-x-2">
+                                <button class="text-blue-500 hover:text-blue-700 font-medium text-sm px-4 py-2 rounded-md restore-button">
+                                    恢复
+                                </button>
+                                <button class="text-red-500 hover:text-red-700 font-medium text-sm px-4 py-2 rounded-md delete-permanently-button">
+                                    彻底删除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                            <div class="flex-1">
+                                <p class="text-lg font-bold text-gray-900 mb-1">大学物理C</p>
+                                <p class="text-sm text-gray-600">2023春-[2022215114-2022215118]</p>
+                            </div>
+                            <div class="text-sm text-gray-700 mr-4">91人</div>
+                            <div class="text-sm text-gray-500 mr-4">剩余2天</div>
+                            <div class="flex space-x-2">
+                                <button class="text-blue-500 hover:text-blue-700 font-medium text-sm px-4 py-2 rounded-md restore-button">
+                                    恢复
+                                </button>
+                                <button class="text-red-500 hover:text-red-700 font-medium text-sm px-4 py-2 rounded-md delete-permanently-button">
+                                    彻底删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2024秋季学期 -->
+                <div class="semester-group">
+                    <div class="flex items-center justify-between bg-gray-100 p-3 rounded-lg cursor-pointer semester-header">
+                        <div class="flex items-center">
+                            <i class="fas fa-chevron-right mr-2 text-gray-600"></i>
+                            <span class="font-semibold text-gray-800">2024秋季学期</span>
+                        </div>
+                        <span class="text-sm text-gray-600">1门课程</span>
+                    </div>
+                    <div class="semester-content hidden pl-8 mt-2 space-y-3">
+                        <div class="flex items-center bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                            <div class="flex-1">
+                                <p class="text-lg font-bold text-gray-900 mb-1">数据结构</p>
+                                <p class="text-sm text-gray-600">2023秋-[2022215114-2022215118]</p>
+                            </div>
+                            <div class="text-sm text-gray-700 mr-4">85人</div>
+                            <div class="text-sm text-gray-500 mr-4">剩余1天</div>
+                            <div class="flex space-x-2">
+                                <button class="text-blue-500 hover:text-blue-700 font-medium text-sm px-4 py-2 rounded-md restore-button">
+                                    恢复
+                                </button>
+                                <button class="text-red-500 hover:text-red-700 font-medium text-sm px-4 py-2 rounded-md delete-permanently-button">
+                                    彻底删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const courseCards = document.querySelectorAll('.course-card');
+
+        courseCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // In a real application, you would pass course ID and navigate
+                window.location.href = 'course_details.html';
+            });
+        });
+
+        // 课程卡片翻页功能
+        const nextCoursePage = document.getElementById('next-course-page');
+        const prevCoursePage = document.getElementById('prev-course-page');
+        const hiddenCourses = document.getElementById('hidden-courses');
+        const firstPageCourses = document.querySelector('.mb-8 .flex.items-center.space-x-4');
+
+        // 检查是否有更多课程卡片
+        function checkMoreCourses() {
+            const totalCourses = document.querySelectorAll('.course-card').length;
+            const coursesPerPage = 4; // 修改为4个课程卡片
+            const hasMore = totalCourses > coursesPerPage;
+            
+            // 控制右箭头的显示/隐藏
+            if (nextCoursePage) {
+                nextCoursePage.style.display = hasMore ? 'flex' : 'none';
+            }
+        }
+
+        nextCoursePage.addEventListener('click', () => {
+            firstPageCourses.classList.add('hidden');
+            hiddenCourses.classList.remove('hidden');
+        });
+
+        prevCoursePage.addEventListener('click', () => {
+            hiddenCourses.classList.add('hidden');
+            firstPageCourses.classList.remove('hidden');
+        });
+
+        // 初始化时检查是否有更多课程
+        checkMoreCourses();
+
+        // 作业列表中的按钮点击事件
+        document.querySelectorAll('#my-assignments-list button').forEach(button => {
+            button.addEventListener('click', (event) => {
+                event.stopPropagation(); // 阻止事件冒泡
+                const assignmentTitle = button.closest('.flex.items-center').querySelector('.text-gray-800').textContent;
+                const assignmentId = assignmentTitle.replace(/[^0-9]/g, ''); // 简单地从标题中提取数字作为ID
+                
+                // 根据按钮文本决定跳转参数
+                if (button.textContent.trim() === '进入批改') {
+                    window.location.href = `assignment_details.html?id=${assignmentId}`;
+                } else if (button.textContent.trim() === '查看反馈') {
+                    // 修改为跳转到作业整体情况标签
+                    window.location.href = `assignment_details.html?id=${assignmentId}&tab=statistics`;
+                }
+            });
+        });
+
+        // 创建课程弹窗相关功能
+        const createCourseButton = document.querySelector('.flex-none.w-24.h-40.border-2.border-dashed');
+        const createCourseModal = document.getElementById('create-course-modal');
+        const closeCreateCourseModal = document.getElementById('close-create-course-modal');
+        const cancelCreateCourse = document.getElementById('cancel-create-course');
+        const createCourseForm = document.getElementById('create-course-form');
+
+        // 打开弹窗
+        createCourseButton.addEventListener('click', () => {
+            createCourseModal.classList.remove('hidden');
+        });
+
+        // 关闭弹窗
+        function closeModal() {
+            createCourseModal.classList.add('hidden');
+            createCourseForm.reset();
+        }
+
+        closeCreateCourseModal.addEventListener('click', closeModal);
+        cancelCreateCourse.addEventListener('click', closeModal);
+
+        // 点击弹窗外部关闭
+        createCourseModal.addEventListener('click', (e) => {
+            if (e.target === createCourseModal) {
+                closeModal();
+            }
+        });
+
+        // 提交表单
+        createCourseForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const courseName = document.getElementById('course-name').value;
+            const courseClass = document.getElementById('course-class').value;
+            const courseSemester = document.getElementById('course-semester').value;
+            const importCourseware = document.getElementById('import-courseware').value;
+
+            // 这里添加创建课程的逻辑
+            console.log('创建课程:', { courseName, courseClass, courseSemester, importCourseware });
+            
+            // 显示成功提示
+            alert('课程创建成功！');
+            
+            // 关闭弹窗
+            closeModal();
+        });
+
+        // 配置课程弹窗相关功能
+        const startClassNav = document.getElementById('start-class-nav');
+        const configureClassModal = document.getElementById('configure-class-modal');
+        const closeConfigureClassModal = document.getElementById('close-configure-class-modal');
+        const configureClassForm = document.getElementById('configure-class-form');
+        const classTitleInput = document.getElementById('class-title');
+
+        // 设置默认标题
+        function setDefaultClassTitle() {
+            const now = new Date();
+            const month = now.getMonth() + 1; // 月份从0开始
+            const day = now.getDate();
+            classTitleInput.value = `${month}月${day}日课程`;
+        }
+
+        // 打开弹窗
+        startClassNav.addEventListener('click', (e) => {
+            e.preventDefault(); // 阻止默认跳转
+            setDefaultClassTitle(); // 设置默认标题
+            configureClassModal.classList.remove('hidden');
+        });
+
+        // 关闭弹窗
+        function closeConfigureModal() {
+            configureClassModal.classList.add('hidden');
+            configureClassForm.reset();
+        }
+
+        closeConfigureClassModal.addEventListener('click', closeConfigureModal);
+
+        // 点击弹窗外部关闭
+        configureClassModal.addEventListener('click', (e) => {
+            if (e.target === configureClassModal) {
+                closeConfigureModal();
+            }
+        });
+
+        // 提交表单
+        configureClassForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const classSelectElement = document.getElementById('class-select');
+            const classSelectedValue = classSelectElement.value;
+            const classSelectedText = classSelectElement.options[classSelectElement.selectedIndex].textContent;
+
+            // 验证课程班级是否已选择
+            if (!classSelectedValue) {
+                alert('请选择课程班级才能开始上课！');
+                return;
+            }
+            
+            // 从文本中解析课程名称和班级班号
+            const match = classSelectedText.match(/^(.*?)\s*-\s*(.*?)$/);
+            let courseName = '未知课程';
+            let classCode = '未知班级';
+            if (match && match.length === 3) {
+                courseName = match[1].trim();
+                classCode = match[2].trim();
+            }
+
+            const coursewareSelected = document.getElementById('courseware-select').value;
+            const classTitle = document.getElementById('class-title').value;
+
+            // 构造跳转URL，并传递参数
+            const url = `class_start.html?courseName=${encodeURIComponent(courseName)}&classCode=${encodeURIComponent(classCode)}&classTitle=${encodeURIComponent(classTitle)}`;
+            
+            // 关闭弹窗
+            closeConfigureModal();
+            
+            // 跳转到上课页面
+            window.location.href = url;
+        });
+
+        // 为每个课程卡片添加开始上课按钮的逻辑
+        document.querySelectorAll('.course-card').forEach(card => {
+            const startClassButton = card.querySelector('.start-class-button');
+
+            if (startClassButton) {
+                startClassButton.addEventListener('click', (event) => {
+                    event.stopPropagation(); // 阻止事件冒泡到卡片本身，避免同时触发卡片点击事件
+
+                    const courseName = startClassButton.dataset.courseName;
+                    const classCode = startClassButton.dataset.classCode;
+
+                    const now = new Date();
+                    const month = now.getMonth() + 1; // 月份从0开始
+                    const day = now.getDate();
+                    const classTitle = `${month}月${day}日课程`;
+
+                    const url = `class_start.html?courseName=${encodeURIComponent(courseName)}&classCode=${encodeURIComponent(classCode)}&classTitle=${encodeURIComponent(classTitle)}`;
+                    window.location.href = url;
+                });
+            }
+        });
+
+        // 为每个更多选项按钮添加悬停和点击逻辑
+        document.querySelectorAll('.more-options-button').forEach(button => {
+            const dropdown = button.nextElementSibling; // 获取相邻的下拉菜单
+
+            // 鼠标进入按钮或下拉菜单时显示
+            button.addEventListener('mouseenter', () => {
+                dropdown.style.opacity = '1';
+                dropdown.style.visibility = 'visible';
+                dropdown.style.transform = 'translateY(0)';
+            });
+
+            dropdown.addEventListener('mouseenter', () => {
+                dropdown.style.opacity = '1';
+                dropdown.style.visibility = 'visible';
+                dropdown.style.transform = 'translateY(0)';
+            });
+
+            // 鼠标离开按钮和下拉菜单时隐藏
+            button.addEventListener('mouseleave', (event) => {
+                // 检查鼠标是否移入下拉菜单
+                if (!dropdown.contains(event.relatedTarget)) {
+                    dropdown.style.opacity = '0';
+                    dropdown.style.visibility = 'hidden';
+                    dropdown.style.transform = 'translateY(-10px)';
+                }
+            });
+
+            dropdown.addEventListener('mouseleave', (event) => {
+                // 检查鼠标是否移出至首页下拉菜单
+                if (!button.contains(event.relatedTarget)) {
+                    dropdown.style.opacity = '0';
+                    dropdown.style.visibility = 'hidden';
+                    dropdown.style.transform = 'translateY(-10px)';
+                }
+            });
+
+            // 点击下拉菜单项的逻辑
+            dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', (event) => {
+                    event.stopPropagation(); // 阻止事件冒泡
+                    const action = item.dataset.action;
+                    const courseCard = item.closest('.course-card');
+                    const courseName = courseCard.querySelector('.course-name').textContent;
+                    const classCode = courseCard.querySelector('.class-code').textContent;
+                    const courseId = item.dataset.courseId; // 获取课程ID
+
+                    if (action === 'edit') {
+                        showEditClassModal(courseId, courseName, classCode); // 显示编辑模态框
+                    } else if (action === 'archive') {
+                        checkShowArchivePrompt(courseId, courseName, classCode); // 显示归档提示模态框
+                    } else if (action === 'delete') {
+                        showDeleteCourseModal(courseId, courseName, classCode); // 显示删除确认模态框
+                    }
+
+                    // 隐藏下拉菜单
+                    dropdown.style.opacity = '0';
+                    dropdown.style.visibility = 'hidden';
+                    dropdown.style.transform = 'translateY(-10px)';
+                });
+            });
+        });
+
+        // 编辑班级信息弹窗相关功能
+        const editClassModal = document.getElementById('edit-class-modal');
+        const closeEditClassModalButton = document.getElementById('close-edit-class-modal');
+        const editClassForm = document.getElementById('edit-class-form');
+        const editClassNameInput = document.getElementById('edit-class-name');
+        const editClassNicknameInput = document.getElementById('edit-class-nickname');
+        const editStartYearSelect = document.getElementById('edit-start-year');
+        const editStartSemesterSelect = document.getElementById('edit-start-semester');
+
+        // 填充年份选择框
+        function populateYears() {
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear - 5; i <= currentYear + 5; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                editStartYearSelect.appendChild(option);
+            }
+            editStartYearSelect.value = currentYear; // 默认选中当前年份
+        }
+
+        // 显示编辑模态框并填充数据
+        function showEditClassModal(courseId, courseName, classCode) {
+            // 在这里根据 courseId 从后端获取或根据 courseName 和 classCode 填充现有数据
+            // 示例：填充班级名称和班级简称
+            editClassNameInput.value = courseName;
+            editClassNicknameInput.value = classCode; // 假设班级简称暂时用班级班号
+
+            // 根据实际数据设置学年和学期
+            // 例如： editStartYearSelect.value = '2025'; editStartSemesterSelect.value = '春';
+            
+            editClassModal.classList.remove('hidden');
+        }
+
+        // 关闭编辑模态框
+        function closeEditModal() {
+            editClassModal.classList.add('hidden');
+            editClassForm.reset();
+        }
+
+        closeEditClassModalButton.addEventListener('click', closeEditModal);
+
+        editClassModal.addEventListener('click', (e) => {
+            if (e.target === editClassModal) {
+                closeEditModal();
+            }
+        });
+
+        editClassForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const editedClassName = editClassNameInput.value;
+            const editedClassNickname = editClassNicknameInput.value;
+            const editedStartYear = editStartYearSelect.value;
+            const editedStartSemester = editStartSemesterSelect.value;
+
+            // 这里添加提交编辑后端的逻辑
+            console.log('编辑课程信息:', { editedClassName, editedClassNickname, editedStartYear, editedStartSemester });
+            alert('课程信息已保存！');
+            closeEditModal();
+        });
+
+        // 归档提示弹窗相关功能
+        const archivePromptModal = document.getElementById('archive-prompt-modal');
+        const doNotRemindArchiveCheckbox = document.getElementById('do-not-remind-archive');
+        const confirmArchiveButton = document.getElementById('confirm-archive-button');
+        const cancelArchiveButton = document.getElementById('cancel-archive-button');
+        let currentCourseId = null;
+        let currentCourseName = null;
+        let currentClassCode = null;
+
+        // 检查是否显示归档提示
+        function checkShowArchivePrompt(courseId, courseName, classCode) {
+            const doNotRemind = localStorage.getItem('doNotRemindArchive') === 'true';
+            if (!doNotRemind) {
+                currentCourseId = courseId;
+                currentCourseName = courseName;
+                currentClassCode = classCode;
+                showArchivePromptModal();
+            } else {
+                // 直接执行归档操作
+                archiveCourse(courseId, courseName, classCode);
+            }
+        }
+
+        // 显示归档提示弹窗
+        function showArchivePromptModal() {
+            archivePromptModal.classList.remove('hidden');
+        }
+
+        // 关闭归档提示弹窗
+        function closeArchivePromptModal() {
+            archivePromptModal.classList.add('hidden');
+            // 重置复选框状态
+            doNotRemindArchiveCheckbox.checked = false;
+        }
+
+        // 归档课程
+        function archiveCourse(courseId, courseName, classCode) {
+            console.log('归档课程:', courseId, courseName, classCode);
+            // TODO: 调用后端API进行归档操作
+            // 这里先模拟归档成功
+            const courseCard = document.querySelector(`[data-course-id="${courseId}"]`);
+            if (courseCard) {
+                courseCard.remove();
+            }
+        }
+
+        // 归档提示弹窗事件监听
+        confirmArchiveButton.addEventListener('click', () => {
+            if (doNotRemindArchiveCheckbox.checked) {
+                localStorage.setItem('doNotRemindArchive', 'true');
+            }
+            closeArchivePromptModal();
+            if (currentCourseId) {
+                archiveCourse(currentCourseId, currentCourseName, currentClassCode);
+            }
+        });
+
+        cancelArchiveButton.addEventListener('click', () => {
+            closeArchivePromptModal();
+        });
+
+        // 删除课程确认弹窗相关功能
+        const deleteCourseModal = document.getElementById('delete-course-modal');
+        const confirmDeleteButton = document.getElementById('confirm-delete-button');
+        const cancelDeleteButton = document.getElementById('cancel-delete-button');
+        let deleteCourseId = null;
+        let deleteCourseName = null;
+        let deleteClassCode = null;
+
+        // 显示删除课程确认弹窗
+        function showDeleteCourseModal(courseId, courseName, classCode) {
+            deleteCourseId = courseId;
+            deleteCourseName = courseName;
+            deleteClassCode = classCode;
+            deleteCourseModal.classList.remove('hidden');
+        }
+
+        // 关闭删除课程确认弹窗
+        function closeDeleteCourseModal() {
+            deleteCourseModal.classList.add('hidden');
+        }
+
+        // 删除课程
+        function deleteCourse(courseId, courseName, classCode) {
+            console.log('删除课程:', courseId, courseName, classCode);
+            // TODO: 调用后端API进行删除操作
+            // 这里先模拟删除成功
+            const courseCard = document.querySelector(`[data-course-id="${courseId}"]`);
+            if (courseCard) {
+                courseCard.remove();
+            }
+        }
+
+        // 删除课程确认弹窗事件监听
+        confirmDeleteButton.addEventListener('click', () => {
+            closeDeleteCourseModal();
+            if (deleteCourseId) {
+                deleteCourse(deleteCourseId, deleteCourseName, deleteClassCode);
+            }
+        });
+
+        cancelDeleteButton.addEventListener('click', () => {
+            closeDeleteCourseModal();
+        });
+
+        // 修改课程卡片下拉菜单的点击事件处理
+        document.querySelectorAll('.course-card').forEach(card => {
+            const dropdownItems = card.querySelectorAll('.dropdown-item');
+            dropdownItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const courseId = card.dataset.courseId;
+                    const courseName = card.querySelector('.course-name').textContent;
+                    const classCode = card.querySelector('.class-code').textContent;
+                    
+                    if (item.classList.contains('delete-item')) {
+                        showDeleteCourseModal(courseId, courseName, classCode);
+                    } else if (item.classList.contains('edit-item')) {
+                        showEditClassModal(courseId, courseName, classCode);
+                    } else if (item.classList.contains('archive-item')) {
+                        checkShowArchivePrompt(courseId, courseName, classCode);
+                    }
+                });
+            });
+        });
+
+        // 归档列表弹窗功能
+        document.addEventListener('DOMContentLoaded', () => {
+            const archiveCoursesButton = document.getElementById('archive-courses-button');
+            const archiveListModal = document.getElementById('archive-list-modal');
+            const closeArchiveListModal = document.getElementById('close-archive-list-modal');
+            const taughtTab = document.getElementById('taught-tab');
+            const taughtCoursesContent = document.getElementById('taught-courses-content');
+            const removeButtons = document.querySelectorAll('#archive-list-modal .remove-button');
+            const semesterHeaders = document.querySelectorAll('.semester-header');
+
+            function showArchiveListModal() {
+                if (archiveListModal) {
+                    archiveListModal.classList.remove('hidden');
+                    console.log('显示归档列表弹窗');
+                }
+            }
+
+            function closeArchiveListModalFunc() {
+                if (archiveListModal) {
+                    archiveListModal.classList.add('hidden');
+                    console.log('关闭归档列表弹窗');
+                }
+            }
+
+            // 处理学期展开/折叠
+            semesterHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('i');
+                    
+                    if (content.classList.contains('hidden')) {
+                        // 展开
+                        content.classList.remove('hidden');
+                        icon.classList.remove('fa-chevron-right');
+                        icon.classList.add('fa-chevron-down');
+                    } else {
+                        // 折叠
+                        content.classList.add('hidden');
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-right');
+                    }
+                });
+            });
+
+            if (archiveCoursesButton) {
+                archiveCoursesButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showArchiveListModal();
+                });
+            }
+
+            if (closeArchiveListModal) {
+                closeArchiveListModal.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    closeArchiveListModalFunc();
+                });
+            }
+
+            if (archiveListModal) {
+                archiveListModal.addEventListener('click', (e) => {
+                    if (e.target === archiveListModal) {
+                        closeArchiveListModalFunc();
+                    }
+                });
+            }
+
+            // 确保"我教的课"内容在初始化时可见
+            if (taughtCoursesContent) {
+                taughtCoursesContent.classList.remove('hidden');
+            }
+
+            // "移除"按钮功能
+            removeButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const courseElement = e.target.closest('.flex.items-center');
+                    const courseName = courseElement.querySelector('p.text-lg').textContent;
+                    console.log(`点击了移除按钮，课程名称: ${courseName}`);
+                    alert(`课程 "${courseName}" 已移除！`);
+                    // 实际项目中，这里会发送请求到后端进行移除操作，并从DOM中删除该课程元素
+                    if (courseElement) {
+                        courseElement.remove();
+                        
+                        // 更新学期课程数量
+                        const semesterGroup = courseElement.closest('.semester-group');
+                        const courseCount = semesterGroup.querySelectorAll('.flex.items-center.bg-gray-50').length;
+                        const countSpan = semesterGroup.querySelector('.semester-header span:last-child');
+                        if (countSpan) {
+                            countSpan.textContent = `${courseCount}门课程`;
+                        }
+                        
+                        // 如果学期内没有课程了，隐藏学期组
+                        if (courseCount === 0) {
+                            semesterGroup.remove();
+                        }
+                    }
+                });
+            });
+        });
+
+        // 回收站功能
+        document.addEventListener('DOMContentLoaded', () => {
+            const recycleBinButton = document.getElementById('recycle-bin-button');
+            const recycleBinModal = document.getElementById('recycle-bin-modal');
+            const closeRecycleBinModal = document.getElementById('close-recycle-bin-modal');
+            const deletedCoursesTab = document.getElementById('deleted-courses-tab');
+            const deletedCoursesContent = document.getElementById('deleted-courses-content');
+            const restoreButtons = document.querySelectorAll('.restore-button');
+            const deletePermanentlyButtons = document.querySelectorAll('.delete-permanently-button');
+            const semesterHeaders = document.querySelectorAll('.semester-header');
+
+            function showRecycleBinModal() {
+                if (recycleBinModal) {
+                    recycleBinModal.classList.remove('hidden');
+                }
+            }
+
+            function closeRecycleBinModalFunc() {
+                if (recycleBinModal) {
+                    recycleBinModal.classList.add('hidden');
+                }
+            }
+
+            // 处理学期展开/折叠
+            semesterHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('i');
+                    
+                    if (content.classList.contains('hidden')) {
+                        content.classList.remove('hidden');
+                        icon.classList.remove('fa-chevron-right');
+                        icon.classList.add('fa-chevron-down');
+                    } else {
+                        content.classList.add('hidden');
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-right');
+                    }
+                });
+            });
+
+            if (recycleBinButton) {
+                recycleBinButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showRecycleBinModal();
+                });
+            }
+
+            if (closeRecycleBinModal) {
+                closeRecycleBinModal.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    closeRecycleBinModalFunc();
+                });
+            }
+
+            if (recycleBinModal) {
+                recycleBinModal.addEventListener('click', (e) => {
+                    if (e.target === recycleBinModal) {
+                        closeRecycleBinModalFunc();
+                    }
+                });
+            }
+
+            // 恢复课程功能
+            restoreButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const courseElement = e.target.closest('.flex.items-center');
+                    const courseName = courseElement.querySelector('p.text-lg').textContent;
+                    if (confirm(`确定要恢复课程 "${courseName}" 吗？`)) {
+                        // 这里添加恢复课程的逻辑
+                        courseElement.remove();
+                        alert(`课程 "${courseName}" 已恢复！`);
+                        
+                        // 更新课程数量
+                        updateCourseCount();
+                    }
+                });
+            });
+
+            // 彻底删除课程功能
+            deletePermanentlyButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const courseElement = e.target.closest('.flex.items-center');
+                    const courseName = courseElement.querySelector('p.text-lg').textContent;
+                    if (confirm(`确定要彻底删除课程 "${courseName}" 吗？此操作不可恢复！`)) {
+                        // 这里添加彻底删除课程的逻辑
+                        courseElement.remove();
+                        alert(`课程 "${courseName}" 已彻底删除！`);
+                        
+                        // 更新课程数量
+                        updateCourseCount();
+                    }
+                });
+            });
+
+            // 更新课程数量
+            function updateCourseCount() {
+                const semesterGroups = document.querySelectorAll('.semester-group');
+                semesterGroups.forEach(group => {
+                    const courseCount = group.querySelectorAll('.flex.items-center.bg-gray-50').length;
+                    const countSpan = group.querySelector('.semester-header span:last-child');
+                    if (countSpan) {
+                        countSpan.textContent = `${courseCount}门课程`;
+                    }
+                    
+                    // 如果学期内没有课程了，隐藏学期组
+                    if (courseCount === 0) {
+                        group.remove();
+                    }
+                });
+
+                // 更新总课程数
+                const totalCourses = document.querySelectorAll('.flex.items-center.bg-gray-50').length;
+                const totalCountSpan = document.querySelector('#deleted-courses-tab');
+                if (totalCountSpan) {
+                    totalCountSpan.textContent = `已删除课程 (${totalCourses})`;
+                }
+            }
+        });
+
+        // 生成随机六位字母代码
+        function generateRandomCode() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += letters.charAt(Math.floor(Math.random() * letters.length));
+            }
+            return code;
+        }
+
+        // 为所有课程卡片添加随机代码
+        document.querySelectorAll('.course-card').forEach(card => {
+            const courseCode = card.querySelector('.course-code');
+            if (courseCode) {
+                courseCode.textContent = generateRandomCode();
+            }
+        });
+    </script>
+
+</body>
+</html> 

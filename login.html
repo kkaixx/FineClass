@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帆课 - 登录</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        accent: '#3B82F6',
+                        dark: '#1F2937',
+                        light: '#F3F4F6',
+                        brandBlue: '#2A72FF', // 类似图片中的蓝色
+                        borderGray: '#DCDFE6',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .input-style {
+                @apply w-full p-3 border border-borderGray rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans bg-light min-h-screen flex">
+    <!-- 左侧宣传区 -->
+    <div class="hidden md:flex flex-1 items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 p-8 relative overflow-hidden">
+        <!-- 背景图形 (抽象的几何形状) -->
+        <div class="absolute top-0 left-0 w-full h-full opacity-30">
+            <svg class="w-full h-full" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="200" cy="800" r="150" fill="#a0c4ff"/>
+                <circle cx="800" cy="200" r="100" fill="#a0c4ff"/>
+                <rect x="50" y="50" width="200" height="150" rx="20" fill="#90b8f8"/>
+                <polygon points="700,700 900,700 800,900" fill="#80b3ff"/>
+            </svg>
+        </div>
+
+        <div class="relative z-10 flex flex-col items-start max-w-xl text-brandBlue">
+            <div class="flex items-center text-3xl font-bold mb-8">
+                <i class="fas fa-chart-bar mr-3 text-4xl"></i>
+                <span>帆课</span>
+            </div>
+            <h1 class="text-5xl font-bold leading-tight mb-8">AI赋能的高效教学工具</h1>
+            <!-- 视觉化图片 - 使用 Unsplash 或 Picsum 作为占位符 -->
+            <img src="https://images.unsplash.com/photo-1549646452-2c672b144b1c?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="数据分析可视化" class="w-full h-auto object-contain rounded-lg shadow-xl">
+        </div>
+    </div>
+
+    <!-- 右侧登录区 -->
+    <div class="flex-1 flex items-center justify-center p-4 md:p-8 bg-white relative">
+        <!-- 语言选择器 -->
+        <div class="absolute top-4 right-4">
+            <div class="relative inline-block text-left group">
+                <button type="button" class="inline-flex justify-center items-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
+                    <i class="fas fa-globe mr-2"></i>Language
+                    <i class="fas fa-chevron-down ml-2 -mr-1 text-xs"></i>
+                </button>
+                <div class="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block z-10">
+                    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">简体中文</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">English</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 登录模态框 -->
+        <div id="main-login-container" class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-md">
+            <h2 class="text-3xl font-bold text-dark mb-8 text-center">一个账号，畅玩帆课</h2>
+
+            <!-- 登录方式切换 -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button id="sms-login-tab" class="flex-1 py-3 text-center text-lg font-semibold text-primary border-b-2 border-primary transition-colors">
+                    验证码登录
+                </button>
+                <button id="password-login-tab" class="flex-1 py-3 text-center text-lg font-semibold text-gray-600 hover:text-primary transition-colors">
+                    密码登录
+                </button>
+            </div>
+
+            <!-- 验证码登录表单 -->
+            <form id="sms-login-form" class="space-y-6">
+                <div>
+                    <label for="sms-phone" class="block text-sm font-medium text-gray-700 mb-2">手机号码</label>
+                    <div class="flex">
+                        <select class="p-3 border border-borderGray rounded-l-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200">
+                            <option>中国大陆+86</option>
+                            <option>香港+852</option>
+                        </select>
+                        <input type="tel" id="sms-phone" class="input-style rounded-l-none" placeholder="请输入手机号">
+                    </div>
+                </div>
+                <div>
+                    <label for="sms-code" class="block text-sm font-medium text-gray-700 mb-2">验证码</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="sms-code" class="input-style flex-1" placeholder="请输入验证码">
+                        <button type="button" id="get-sms-code-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                            获取验证码
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center text-sm text-gray-600">
+                    <input type="checkbox" id="agreement" class="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary mr-2">
+                    <label for="agreement">我已阅读并同意
+                        <a href="#" class="text-primary hover:underline">《帆课用户服务协议》</a>、
+                        <a href="#" class="text-primary hover:underline">《隐私政策》</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-accent transition-colors">
+                    注册/登录
+                </button>
+            </form>
+
+            <!-- 密码登录表单 (默认隐藏) -->
+            <form id="password-login-form" class="space-y-6 hidden">
+                <div>
+                    <label for="username-email" class="block text-sm font-medium text-gray-700 mb-2">用户名/手机号码/邮箱</label>
+                    <input type="text" id="username-email" class="input-style" placeholder="请输入用户名/手机号码/邮箱">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="password-input" class="block text-sm font-medium text-gray-700">密码</label>
+                        <a href="#" class="text-primary hover:underline text-sm">忘记密码?</a>
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="password-input" class="input-style pr-10" placeholder="请输入密码">
+                        <button type="button" id="toggle-password-visibility" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center text-sm text-gray-600">
+                    <input type="checkbox" id="agreement-password" class="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary mr-2">
+                    <label for="agreement-password">我已阅读并同意
+                        <a href="#" class="text-primary hover:underline">《帆课用户服务协议》</a>、
+                        <a href="#" class="text-primary hover:underline">《隐私政策》</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-accent transition-colors">
+                    登录
+                </button>
+            </form>
+
+            <!-- 分割线 -->
+            <div class="flex items-center my-8">
+                <div class="flex-grow border-t border-gray-200"></div>
+                <span class="flex-shrink mx-4 text-gray-500 text-sm">社交账号登录</span>
+                <div class="flex-grow border-t border-gray-200"></div>
+            </div>
+
+            <!-- 微信登录 -->
+            <div class="flex justify-center">
+                <button id="wechat-login-btn" class="flex items-center space-x-2 px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    <i class="fab fa-weixin text-green-500 text-2xl"></i>
+                    <span>微信登录</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 微信扫码登录模态框 (默认隐藏) -->
+        <div id="wechat-qr-login-form" class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-md hidden">
+            <h2 class="text-3xl font-bold text-dark mb-8 text-center">一个账号，畅玩帆课</h2>
+            <div class="flex items-center justify-center mb-8 space-x-2">
+                <i class="fab fa-weixin text-green-500 text-2xl"></i>
+                <p class="text-lg text-gray-700">使用微信扫一扫登录</p>
+            </div>
+
+            <!-- 二维码占位符 -->
+            <div class="flex justify-center mb-8">
+                <img src="https://picsum.photos/250/250?random=qrcode" alt="登录二维码" class="w-64 h-64 border border-gray-200 rounded-lg p-2">
+            </div>
+
+            <p class="text-center text-sm text-gray-600 mb-12">
+                扫码表示并同意
+                <a href="#" class="text-primary hover:underline">《帆课用户服务协议》</a>、
+                <a href="#" class="text-primary hover:underline">《隐私政策》</a>
+            </p>
+
+            <!-- 其他登录方式 -->
+            <div class="flex justify-center space-x-8 text-sm text-gray-600">
+                <span class="text-dark">其他登录方式</span>
+                <button id="wechat-to-sms-btn" class="flex items-center hover:text-primary transition-colors">
+                    <i class="fas fa-mobile-alt mr-1"></i>手机验证码
+                </button>
+                <button id="wechat-to-password-btn" class="flex items-center hover:text-primary transition-colors">
+                    <i class="fas fa-key mr-1"></i>账号密码
+                </button>
+            </div>
+        </div>
+
+        <!-- 绑定帆课账号模态框 (默认隐藏) -->
+        <div id="bind-account-modal" class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-md hidden">
+            <div class="flex items-center justify-center mb-6 space-x-2">
+                <i class="fab fa-weixin text-green-500 text-5xl"></i>
+                <i class="fas fa-link text-gray-400 text-xl"></i>
+                <i class="fas fa-cube text-primary text-5xl"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-dark mb-2 text-center">绑定帆课账号</h2>
+            <p class="text-center text-gray-600 text-sm mb-8">只需一次绑定，绑定后可使用微信一键登录</p>
+
+            <!-- 登录方式切换 -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button id="bind-sms-tab" class="flex-1 py-3 text-center text-lg font-semibold text-primary border-b-2 border-primary transition-colors">
+                    验证码登录
+                </button>
+                <button id="bind-password-tab" class="flex-1 py-3 text-center text-lg font-semibold text-gray-600 hover:text-primary transition-colors">
+                    密码登录
+                </button>
+            </div>
+
+            <!-- 绑定验证码登录表单 -->
+            <form id="bind-sms-form" class="space-y-6">
+                <div>
+                    <label for="bind-sms-phone" class="block text-sm font-medium text-gray-700 mb-2">手机号码</label>
+                    <div class="flex">
+                        <select class="p-3 border border-borderGray rounded-l-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200">
+                            <option>中国大陆+86</option>
+                            <option>香港+852</option>
+                        </select>
+                        <input type="tel" id="bind-sms-phone" class="input-style rounded-l-none" placeholder="请输入手机号" value="15880461115">
+                    </div>
+                </div>
+                <div>
+                    <label for="bind-sms-code" class="block text-sm font-medium text-gray-700 mb-2">验证码</label>
+                    <div class="flex space-x-2">
+                        <input type="text" id="bind-sms-code" class="input-style flex-1" placeholder="请输入验证码">
+                        <button type="button" id="get-bind-sms-code-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                            获取验证码
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center text-sm text-gray-600">
+                    <input type="checkbox" id="agreement-bind-sms" class="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary mr-2">
+                    <label for="agreement-bind-sms">我已阅读并同意
+                        <a href="#" class="text-primary hover:underline">《帆课用户服务协议》</a>、
+                        <a href="#" class="text-primary hover:underline">《隐私政策》</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-accent transition-colors">
+                    注册/登录
+                </button>
+            </form>
+
+            <!-- 绑定密码登录表单 (默认隐藏) -->
+            <form id="bind-password-form" class="space-y-6 hidden">
+                <div>
+                    <label for="bind-username-email" class="block text-sm font-medium text-gray-700 mb-2">用户名/手机号码/邮箱</label>
+                    <input type="text" id="bind-username-email" class="input-style" placeholder="请输入用户名/手机号码/邮箱">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="bind-password-input" class="block text-sm font-medium text-gray-700">密码</label>
+                        <a href="#" class="text-primary hover:underline text-sm">忘记密码?</a>
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="bind-password-input" class="input-style pr-10" placeholder="请输入密码">
+                        <button type="button" id="toggle-bind-password-visibility" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center text-sm text-gray-600">
+                    <input type="checkbox" id="agreement-bind-password" class="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary mr-2">
+                    <label for="agreement-bind-password">我已阅读并同意
+                        <a href="#" class="text-primary hover:underline">《帆课用户服务协议》</a>、
+                        <a href="#" class="text-primary hover:underline">《隐私政策》</a>
+                    </label>
+                </div>
+
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-lg hover:bg-accent transition-colors">
+                    注册/登录
+                </button>
+            </form>
+        </div>
+
+        <!-- 新增：角色选择模态框 -->
+        <div id="role-selection-modal" class="bg-white p-8 md:p-12 rounded-xl shadow-2xl w-full max-w-md hidden">
+            <h2 class="text-3xl font-bold text-dark mb-8 text-center">选择角色</h2>
+            <div class="flex flex-col space-y-4">
+                <button id="teacher-role-btn" class="w-full px-6 py-3 bg-green-500 text-white rounded-lg font-semibold text-lg hover:bg-green-600 transition-colors">
+                    我是教师
+                </button>
+                <button id="student-role-btn" class="w-full px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold text-lg hover:bg-yellow-600 transition-colors">
+                    我是学生
+                </button>
+            </div>
+        </div>
+
+        <!-- 激活问题/联系我 -->
+        <div class="absolute bottom-4 right-4 text-sm text-gray-500">
+            激活有问题? <a href="#" class="text-primary hover:underline">联系我</a>
+        </div>
+    </div>
+
+    <script>
+        const smsLoginTab = document.getElementById('sms-login-tab');
+        const passwordLoginTab = document.getElementById('password-login-tab');
+        const smsLoginForm = document.getElementById('sms-login-form');
+        const passwordLoginForm = document.getElementById('password-login-form');
+        const getSmsCodeBtn = document.getElementById('get-sms-code-btn');
+        const wechatLoginBtn = document.getElementById('wechat-login-btn');
+        const wechatQrLoginForm = document.getElementById('wechat-qr-login-form');
+        const wechatToSmsBtn = document.getElementById('wechat-to-sms-btn');
+        const wechatToPasswordBtn = document.getElementById('wechat-to-password-btn');
+
+        // 获取新的主登录容器元素
+        const mainLoginContainer = document.getElementById('main-login-container');
+        
+        // 获取微信扫码页的二维码图片元素
+        const qrCodeImg = document.querySelector('#wechat-qr-login-form img[alt="登录二维码"]');
+        // 获取绑定账号模态框元素
+        const bindAccountModal = document.getElementById('bind-account-modal');
+        // 获取绑定账号模态框内的Tab和表单
+        const bindSmsTab = document.getElementById('bind-sms-tab');
+        const bindPasswordTab = document.getElementById('bind-password-tab');
+        const bindSmsForm = document.getElementById('bind-sms-form');
+        const bindPasswordForm = document.getElementById('bind-password-form');
+        const getBindSmsCodeBtn = document.getElementById('get-bind-sms-code-btn');
+        const toggleBindPasswordVisibilityBtn = document.getElementById('toggle-bind-password-visibility');
+        const bindPasswordInput = document.getElementById('bind-password-input');
+
+        // 密码可见性切换 (原登录框)
+        const togglePasswordVisibilityBtn = document.getElementById('toggle-password-visibility');
+        const passwordInput = document.getElementById('password-input');
+
+        // 新增：角色选择模态框及其按钮
+        const roleSelectionModal = document.getElementById('role-selection-modal');
+        const teacherRoleBtn = document.getElementById('teacher-role-btn');
+        const studentRoleBtn = document.getElementById('student-role-btn');
+
+        if (togglePasswordVisibilityBtn && passwordInput) {
+            togglePasswordVisibilityBtn.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                // 切换图标
+                togglePasswordVisibilityBtn.querySelector('i').classList.toggle('fa-eye');
+                togglePasswordVisibilityBtn.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // 绑定账号模态框内的密码可见性切换
+        if (toggleBindPasswordVisibilityBtn && bindPasswordInput) {
+            toggleBindPasswordVisibilityBtn.addEventListener('click', () => {
+                const type = bindPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                bindPasswordInput.setAttribute('type', type);
+                // 切换图标
+                toggleBindPasswordVisibilityBtn.querySelector('i').classList.toggle('fa-eye');
+                toggleBindPasswordVisibilityBtn.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // 切换登录方式 (原登录框)
+        smsLoginTab.addEventListener('click', () => {
+            smsLoginTab.classList.add('text-primary', 'border-primary');
+            smsLoginTab.classList.remove('text-gray-600', 'hover:text-primary');
+            passwordLoginTab.classList.remove('text-primary', 'border-primary');
+            passwordLoginTab.classList.add('text-gray-600', 'hover:text-primary');
+
+            smsLoginForm.classList.remove('hidden');
+            passwordLoginForm.classList.add('hidden');
+            wechatQrLoginForm.classList.add('hidden'); // 隐藏微信扫码登录
+            mainLoginContainer.classList.remove('hidden'); // 确保主登录容器显示
+            bindAccountModal.classList.add('hidden'); // 隐藏绑定账号模态框
+        });
+
+        passwordLoginTab.addEventListener('click', () => {
+            passwordLoginTab.classList.add('text-primary', 'border-primary');
+            passwordLoginTab.classList.remove('text-gray-600', 'hover:text-primary');
+            smsLoginTab.classList.remove('text-primary', 'border-primary');
+            smsLoginTab.classList.add('text-gray-600', 'hover:text-primary');
+
+            passwordLoginForm.classList.remove('hidden');
+            smsLoginForm.classList.add('hidden');
+            wechatQrLoginForm.classList.add('hidden'); // 隐藏微信扫码登录
+            mainLoginContainer.classList.remove('hidden'); // 确保主登录容器显示
+            bindAccountModal.classList.add('hidden'); // 隐藏绑定账号模态框
+        });
+
+        // 微信登录按钮点击事件
+        wechatLoginBtn.addEventListener('click', () => {
+            mainLoginContainer.classList.add('hidden'); // 隐藏主登录容器
+            wechatQrLoginForm.classList.remove('hidden'); // 显示微信扫码登录
+            bindAccountModal.classList.add('hidden'); // 隐藏绑定账号模态框
+        });
+
+        // 模拟二维码点击事件，显示绑定账号模态框
+        qrCodeImg.addEventListener('click', () => {
+            wechatQrLoginForm.classList.add('hidden'); // 隐藏微信扫码登录
+            bindAccountModal.classList.remove('hidden'); // 显示绑定账号模态框
+            // 确保绑定验证码登录tab被选中
+            bindSmsTab.click();
+        });
+
+        // 从微信扫码页切换到手机验证码登录 (回到主登录框)
+        wechatToSmsBtn.addEventListener('click', () => {
+            wechatQrLoginForm.classList.add('hidden');
+            mainLoginContainer.classList.remove('hidden'); // 显示主登录容器
+            smsLoginTab.click();
+        });
+
+        // 从微信扫码页切换到账号密码登录 (回到主登录框)
+        wechatToPasswordBtn.addEventListener('click', () => {
+            wechatQrLoginForm.classList.add('hidden');
+            mainLoginContainer.classList.remove('hidden'); // 显示主登录容器
+            passwordLoginTab.click();
+        });
+
+        // 绑定账号模态框内的Tab切换
+        bindSmsTab.addEventListener('click', () => {
+            bindSmsTab.classList.add('text-primary', 'border-primary');
+            bindSmsTab.classList.remove('text-gray-600', 'hover:text-primary');
+            bindPasswordTab.classList.remove('text-primary', 'border-primary');
+            bindPasswordTab.classList.add('text-gray-600', 'hover:text-primary');
+
+            bindSmsForm.classList.remove('hidden');
+            bindPasswordForm.classList.add('hidden');
+        });
+
+        bindPasswordTab.addEventListener('click', () => {
+            bindPasswordTab.classList.add('text-primary', 'border-primary');
+            bindPasswordTab.classList.remove('text-gray-600', 'hover:text-primary');
+            bindSmsTab.classList.remove('text-primary', 'border-primary');
+            bindSmsTab.classList.add('text-gray-600', 'hover:text-primary');
+
+            bindPasswordForm.classList.remove('hidden');
+            bindSmsForm.classList.add('hidden');
+        });
+
+        // 绑定账号模态框的提交行为 (显示角色选择模态框)
+        bindSmsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            bindAccountModal.classList.add('hidden');
+            roleSelectionModal.classList.remove('hidden');
+        });
+
+        bindPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            bindAccountModal.classList.add('hidden');
+            roleSelectionModal.classList.remove('hidden');
+        });
+
+        // 角色选择按钮点击事件
+        teacherRoleBtn.addEventListener('click', () => {
+            window.location.href = 'homepage.html'; // 跳转到教师主页
+        });
+
+        studentRoleBtn.addEventListener('click', () => {
+            window.location.href = 'student_homepage.html'; // 跳转到学生主页
+        });
+
+        // 获取验证码按钮倒计时 (原登录框)
+        getSmsCodeBtn.addEventListener('click', () => {
+            let timeLeft = 60;
+            getSmsCodeBtn.disabled = true;
+            getSmsCodeBtn.textContent = `重新发送 (${timeLeft}s)`;
+            getSmsCodeBtn.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+            getSmsCodeBtn.classList.add('bg-gray-100', 'text-gray-500');
+
+            const countdown = setInterval(() => {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    getSmsCodeBtn.textContent = `重新发送 (${timeLeft}s)`;
+                } else {
+                    clearInterval(countdown);
+                    getSmsCodeBtn.disabled = false;
+                    getSmsCodeBtn.textContent = '获取验证码';
+                    getSmsCodeBtn.classList.remove('bg-gray-100', 'text-gray-500');
+                    getSmsCodeBtn.classList.add('bg-gray-200', 'hover:bg-gray-300');
+                }
+            }, 1000);
+        });
+
+        // 获取验证码按钮倒计时 (绑定账号模态框)
+        if (getBindSmsCodeBtn) {
+            getBindSmsCodeBtn.addEventListener('click', () => {
+                let timeLeft = 60;
+                getBindSmsCodeBtn.disabled = true;
+                getBindSmsCodeBtn.textContent = `重新发送 (${timeLeft}s)`;
+                getBindSmsCodeBtn.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+                getBindSmsCodeBtn.classList.add('bg-gray-100', 'text-gray-500');
+
+                const countdown = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft > 0) {
+                        getBindSmsCodeBtn.textContent = `重新发送 (${timeLeft}s)`;
+                    } else {
+                        clearInterval(countdown);
+                        getBindSmsCodeBtn.disabled = false;
+                        getBindSmsCodeBtn.textContent = '获取验证码';
+                        getBindSmsCodeBtn.classList.remove('bg-gray-100', 'text-gray-500');
+                        getBindSmsCodeBtn.classList.add('bg-gray-200', 'hover:bg-gray-300');
+                    }
+                }, 1000);
+            });
+        }
+    </script>
+</body>
+</html>

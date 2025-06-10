@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI作业批改原型 - 作业批改</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        accent: '#3B82F6',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                        neutral: {
+                            100: '#F3F4F6',
+                            200: '#E5E7EB',
+                            300: '#D1D5DB',
+                            400: '#9CA3AF',
+                            500: '#6B7280',
+                            600: '#4B5563',
+                            700: '#374151',
+                            800: '#1F2937',
+                            900: '#111827',
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            }
+        }
+    </script>
+    <style>
+        /* 自定义滚动条样式，让其更细致 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+         /* Style for the range input (slider) */
+         input[type="range"] {
+            -webkit-appearance: none; /* Override default appearance */
+            appearance: none;
+            height: 8px; /* Specify a height */
+            background: #d1d5db; /* Grey background */
+            outline: none; /* Remove outline */
+            opacity: 0.7; /* Add transparency */
+            transition: opacity .15s ease-in-out; /* Smooth transition for hover */
+            border-radius: 4px;
+         }
+
+         input[type="range"]:hover {
+            opacity: 1;
+         }
+
+         /* Style for the slider handle (Chrome, Edge, Safari) */
+         input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Override default appearance */
+            appearance: none;
+            width: 18px; /* Set a specific slider handle width */
+            height: 18px; /* Slider handle height */
+            background: #165DFF; /* Blue color */
+            cursor: pointer; /* Cursor on hover */
+            border-radius: 50%; /* Make it round */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+         }
+
+         /* Style for the slider handle (Firefox) */
+         input[type="range"]::-moz-range-thumb {
+            width: 18px; /* Set a specific slider handle width */
+            height: 18px; /* Slider handle height */
+            background: #165DFF; /* Blue color */
+            cursor: pointer; /* Cursor on hover */
+            border-radius: 50%; /* Make it round */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+         }
+    </style>
+</head>
+<body class="flex flex-col h-screen bg-gray-100 font-inter text-neutral-800 overflow-hidden">
+
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center">
+            <button id="back-to-assignment-details" class="flex items-center text-neutral-600 hover:text-primary transition-colors duration-200 mr-4" type="button">
+                <i class="fas fa-arrow-left mr-2"></i>
+                <span class="hidden sm:inline">返回</span> <!-- 返回按钮 -->
+            </button>
+             <!-- 学生和作业标题 -->
+            <h1 class="text-lg sm:text-xl font-semibold text-neutral-800">[学生姓名 Placeholder] 的作业</h1>
+        </div>
+
+        <div class="flex items-center space-x-4 sm:space-x-6">
+            <!-- Removed AI辅助批改标记 -->
+
+            <!-- 总分 -->
+            <div class="text-neutral-700 flex items-center">
+                <span class="mr-1 hidden sm:inline">总分:</span>
+                <!-- Placeholder for current total score -->
+                <span id="total-score" class="font-bold text-lg sm:text-xl text-primary">0</span>
+                 <!-- Placeholder for total possible score -->
+                <span class="font-bold text-lg sm:text-xl text-neutral-700">/8</span>
+            </div>
+            <!-- 申请作业重审按钮 -->
+            <button id="request-regrade-button" class="bg-primary hover:bg-primary/90 text-white font-medium py-1.5 px-3 rounded-lg text-sm transition-colors duration-200" type="button">
+                申请作业重审
+            </button>
+        </div>
+    </header>
+
+    <!-- 主内容区域 -->
+    <main class="flex-1 flex overflow-hidden relative">
+        <!-- 左侧：作业内容展示区 -->
+        <div class="flex-1 p-6 overflow-y-auto bg-white border-r border-gray-200">
+            <!-- 作业内容占位符 -->
+            <div class="border border-dashed border-gray-400 rounded-lg h-full flex items-center justify-center text-gray-500 text-lg">
+                [学生提交的作业内容 Placeholder: 文档, 代码等]
+            </div>
+             <!-- 缩放控件 (可选) -->
+             <div class="flex items-center justify-center mt-4 space-x-2 text-neutral-600">
+                 <button class="hover:text-primary text-sm transition-colors duration-200" type="button"><i class="fas fa-search-minus mr-1"></i>缩小</button>
+                 <span class="text-neutral-700 text-sm">100%</span>
+                 <button class="hover:text-primary text-sm transition-colors duration-200" type="button"><i class="fas fa-search-plus mr-1"></i>放大</button>
+             </div>
+        </div>
+
+        <!-- 浮动学生列表按钮 -->
+        <button id="ai-analysis-button" class="fixed left-4 bottom-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-white p-3 rounded-full shadow-lg transition-all duration-200 z-50" type="button">
+            AI
+        </button>
+
+        <!-- 右侧：批改操作区 -->
+        <div class="flex-1 p-6 overflow-y-auto bg-gray-50">
+            <!-- Removed 批改头部：AI General Instructions -->
+
+
+            <!-- 题目批改列表 -->
+            <div id="grading-items-list" class="space-y-6">
+                <!-- 单个题目批改项 (示例) -->
+                <div class="question-card bg-white rounded-xl shadow-card p-4 sm:p-6 border border-neutral-200 hover:shadow-card-hover transition-all duration-300 relative">
+                    <div class="flex flex-col space-y-4">
+                        <!-- 题目内容简述 (Placeholder) -->
+                         <div class="text-neutral-700 text-sm">
+                             <p>按下 LCD 防护罩上的 UP 按钮，并描述您在 LCD 显示屏中看到的内容。</p>
+                         </div>
+
+                        <!-- 得分情况 -->
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-neutral-700">得分:</label>
+                            <div class="flex items-center space-x-4">
+                                 <!-- 得分滑动条 -->
+                                 <input type="range" min="0.0" max="4.0" value="2.0" step="0.5" class="score-slider w-32" disabled>
+                                 <!-- 当前得分显示 -->
+                                 <span class="score-display text-lg font-bold text-primary min-w-[3rem] text-right">2.0</span>
+                                 <span class="text-neutral-700 text-sm mr-4">/ 4</span> <!-- 每题总分设为4 -->
+                                 <!-- AI 微调按钮 -->
+                                 <button class="text-primary hover:text-primary/90 text-sm flex items-center transition-colors duration-200 view-rubric-btn" type="button">
+                                     <i class="fas fa-cogs mr-1"></i>查看评分细则
+                                 </button>
+                            </div>
+                        </div>
+                        <!-- 反馈区域 -->
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 mb-1"><i class="far fa-star mr-1 text-warning"></i>反馈:</label>
+                             <div class="relative">
+                                <textarea class="feedback-textarea w-full border border-neutral-300 rounded-md p-2 pr-12 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" rows="3" placeholder="✓ 正确识别 adc_read() 中的最大值为 4095
+✓ 正确确定需要 12 位来编码此值" readonly></textarea>
+                             </div>
+                        </div>
+                    </div>
+                    <!-- 评分细则模块 -->
+                    <div class="rubric-module hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-xl z-10">
+                        <div class="bg-white h-full rounded-xl shadow-card border border-neutral-200 flex flex-col p-4 sm:p-6">
+                            <button class="absolute top-4 left-4 text-neutral-600 hover:text-neutral-800 cancel-rubric-btn" type="button">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                            <textarea class="flex-1 w-full border border-neutral-300 rounded-md p-2 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200 mt-8" placeholder="评分细则内容..." readonly>
+（2分）正确识别 adc_read() 中的最大值为 4095
+（2分）正确确定需要 12 位来编码此值
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- 可以添加更多题目批改项 -->
+                 <!-- Another sample item -->
+                 <div class="question-card bg-white rounded-xl shadow-card p-4 sm:p-6 border border-neutral-200 hover:shadow-card-hover transition-all duration-300 relative">
+                    <div class="flex flex-col space-y-4">
+                         <div class="text-neutral-700 text-sm">
+                             <p>您从函数 adc_read（） 中获得的最大值是多少？对这个最大值进行编码需要多少位？</p>
+                         </div>
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-neutral-700">得分:</label>
+                            <div class="flex items-center space-x-4">
+                                 <!-- 得分滑动条 -->
+                                 <input type="range" min="0.0" max="4.0" value="2.0" step="0.5" class="score-slider w-32" disabled>
+                                 <!-- 当前得分显示 -->
+                                 <span class="score-display text-lg font-bold text-primary min-w-[3rem] text-right">2.0</span>
+                                 <span class="text-neutral-700 text-sm mr-4">/ 4</span> <!-- 每题总分设为4 -->
+                                 <!-- AI 微调按钮 -->
+                                 <button class="text-primary hover:text-primary/90 text-sm flex items-center transition-colors duration-200 view-rubric-btn" type="button">
+                                     <i class="fas fa-cogs mr-1"></i>查看评分细则
+                                 </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 mb-1"><i class="far fa-star mr-1 text-warning"></i>反馈:</label>
+                             <div class="relative">
+                                <textarea class="feedback-textarea w-full border border-neutral-300 rounded-md p-2 pr-12 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" rows="3" placeholder="✓ 正确识别 adc_read() 中的最大值为 4095
+✓ 正确确定需要 12 位来编码此值" readonly></textarea>
+                             </div>
+                        </div>
+                    </div>
+                    <!-- 评分细则模块 -->
+                    <div class="rubric-module hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-xl z-10">
+                        <div class="bg-white h-full rounded-xl shadow-card border border-neutral-200 flex flex-col p-4 sm:p-6">
+                            <button class="absolute top-4 left-4 text-neutral-600 hover:text-neutral-800 cancel-rubric-btn" type="button">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                            <textarea class="flex-1 w-full border border-neutral-300 rounded-md p-2 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200 mt-8" placeholder="评分细则内容..." readonly>
+（2分）正确识别 adc_read() 中的最大值为 4095
+（2分）正确确定需要 12 位来编码此值
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <!-- 总体反馈/评语 -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mt-6 border border-gray-200">
+                 <h4 class="text-sm font-semibold text-neutral-800 mb-3">总体反馈/评语</h4>
+                 <textarea class="w-full border border-neutral-300 rounded-md p-2 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" rows="4" placeholder="输入总体反馈或评语..."></textarea>
+            </div>
+
+            <!-- 保存/提交按钮 -->
+            <div class="flex justify-end mt-6 hidden">
+                 <button id="save-grading-button" class="bg-success hover:bg-success/90 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors duration-200" type="button">
+                     复核无误
+                 </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 学生名单模态框 -->
+    <div id="ai-analysis-modal" class="fixed top-0 bottom-0 left-0 w-80 bg-black/50 z-50 transform -translate-x-full transition-transform duration-300 ease-out">
+        <div class="bg-white h-full p-6 sm:p-8 relative shadow-xl">
+            <h3 class="text-xl font-semibold text-neutral-800 mb-4">AI 分析薄弱点</h3>
+            <button class="absolute top-4 right-4 text-neutral-600 hover:text-neutral-800" onclick="hideAIAnalysisModal()" type="button">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="space-y-4 max-h-[calc(100vh-120px)] overflow-y-auto pr-2">
+                <!-- AI 分析薄弱点内容占位符 -->
+                <div class="p-4 bg-blue-50 rounded-lg border border-blue-200 text-blue-800 text-sm">
+                    <h4 class="font-semibold mb-2 flex items-center"><i class="fas fa-lightbulb mr-2 text-blue-600"></i>整体薄弱点</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>对 `adc_read()` 函数的返回值理解不够深入，未能完全掌握其最大值。</li>
+                        <li>在编码位数的确定上存在偏差，未能准确计算所需位数。</li>
+                    </ul>
+                </div>
+
+                <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-yellow-800 text-sm">
+                    <h4 class="font-semibold mb-2 flex items-center"><i class="fas fa-exclamation-triangle mr-2 text-yellow-600"></i>建议和改进</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>复习 ADC 转换器的工作原理，特别是其分辨率和量化误差。</li>
+                        <li>练习二进制和位运算，加深对数据编码的理解。</li>
+                        <li>尝试阅读 `adc_read()` 函数的官方文档或源代码，了解其具体实现。</li>
+                    </ul>
+                </div>
+
+                <div class="text-center text-neutral-500 text-xs mt-6">
+                    <p>AI 分析基于当前作业内容，仅供参考。</p>
+                </div>
+
+                <button class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2 rounded-lg text-sm transition-colors duration-200 mt-4" id="reanalyze-button" type="button">
+                    重新分析
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 申请作业重审模态框 -->
+    <div id="regrade-request-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-11/12 max-w-md relative">
+            <h3 class="text-xl font-semibold text-neutral-800 mb-4">申请作业重审</h3>
+            <button class="absolute top-4 right-4 text-neutral-600 hover:text-neutral-800" onclick="hideRegradeRequestModal()" type="button">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <form class="space-y-4">
+                <div>
+                    <label for="regrade-reason" class="block text-sm font-medium text-neutral-700 mb-1">申请理由:</label>
+                    <textarea id="regrade-reason" class="w-full border border-neutral-300 rounded-md p-2 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" rows="6" placeholder="请详细说明您申请重审的理由..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="bg-gray-200 hover:bg-gray-300 text-neutral-800 font-medium py-2 px-4 rounded-lg text-sm transition-colors duration-200" onclick="hideRegradeRequestModal()">
+                        取消
+                    </button>
+                    <button type="submit" class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors duration-200">
+                        提交申请
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 返回按钮功能
+        document.getElementById('back-to-assignment-details').addEventListener('click', () => {
+            // TODO: Replace with actual navigation logic to the student assignment list tab on the assignment details page
+            window.history.back(); // Fallback: go back to the previous page
+        });
+
+        // AI 分析薄弱点模态框功能
+        document.getElementById('ai-analysis-button').addEventListener('click', showAIAnalysisModal);
+
+        function showAIAnalysisModal() {
+            const modal = document.getElementById('ai-analysis-modal');
+            modal.classList.remove('-translate-x-full');
+            modal.classList.add('translate-x-0');
+            modal.classList.remove('hidden'); // 确保背景遮罩显示
+        }
+
+        function hideAIAnalysisModal() {
+            const modal = document.getElementById('ai-analysis-modal');
+            modal.classList.remove('translate-x-0');
+            modal.classList.add('-translate-x-full');
+            // 动画结束后隐藏，避免遮挡点击事件
+            modal.addEventListener('transitionend', function handler() {
+                modal.classList.add('hidden');
+                modal.removeEventListener('transitionend', handler);
+            }, { once: true });
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('ai-analysis-modal').addEventListener('click', function(event) {
+            // 确保点击的是背景而不是模态框内容
+            if (event.target === this) {
+                hideAIAnalysisModal();
+            }
+        });
+
+        // 重新分析按钮功能
+        document.getElementById('reanalyze-button').addEventListener('click', () => {
+            alert('AI 正在重新分析薄弱点... (此为模拟功能)');
+            // 在这里可以添加实际的 AI 分析逻辑
+        });
+
+        // TODO: 这里可以添加获取当前学生和作业信息的逻辑，以及分页导航的逻辑
+        // 根据URL参数获取学生ID和作业ID，然后加载对应数据
+        // 更新页面标题，总分，分页信息
+
+        let hasGradingChanges = false; // 标记是否进行了评分修改
+        // const saveGradingButton = document.getElementById('save-grading-button'); // This button is now hidden
+
+        // 监听得分滑动条变化并更新显示得分 (DISABLED NOW)
+        const gradingItemsList = document.getElementById('grading-items-list'); // Ensure this is defined
+        if (gradingItemsList) {
+            gradingItemsList.addEventListener('input', (event) => {
+                const target = event.target;
+                if (target.classList.contains('score-slider')) {
+                    const scoreDisplay = target.closest('.flex.items-center').querySelector('.score-display');
+                    if (scoreDisplay) {
+                        scoreDisplay.textContent = Number(target.value).toFixed(1);
+                        updateTotalScore(); // 实时更新总分
+                        // 如果尚未标记为有修改，则进行标记并更新按钮样式
+                        // if (!hasGradingChanges) {
+                        //     hasGradingChanges = true;
+                        //     updateSaveButtonTextAndColor();
+                        // }
+                    }
+                }
+            });
+        }
+
+        // 页面加载时初始化按钮状态
+        window.addEventListener('load', () => {
+            // updateSaveButtonTextAndColor(); // This function is removed
+            // Initialize individual score displays on load
+            document.querySelectorAll('.score-slider').forEach(slider => {
+                const scoreDisplay = slider.closest('.flex.items-center').querySelector('.score-display');
+                if (scoreDisplay) {
+                    scoreDisplay.textContent = Number(slider.value).toFixed(1);
+                }
+            });
+        });
+
+        // Update total score - Modified to read from range inputs
+        function updateTotalScore() {
+            const scoreSliders = document.querySelectorAll('#grading-items-list .score-slider');
+            const total = Array.from(scoreSliders).reduce((sum, slider) => sum + Number(slider.value), 0);
+
+            // Assuming the current total score is displayed in the header with id="total-score"
+            const totalScoreSpan = document.querySelector('header #total-score');
+            if (totalScoreSpan) {
+                totalScoreSpan.textContent = total.toFixed(1);
+            }
+            // Note: The total possible score placeholder '/ [总分 Placeholder]' in the header needs to be dynamically updated
+            // based on the number of questions * points per question (currently 4). This logic is not yet implemented.
+        }
+
+        // Initial total score calculation on page load
+        window.addEventListener('load', updateTotalScore);
+
+        // Feedback area interactions (simplified as feedback is readonly)
+        // No need for focusin or quick-insert-buttons as textarea is readonly.
+        // Remove existing feedback-related event listeners for cancel/save buttons if they target feedback-action-buttons class.
+
+        // 申请作业重审模态框功能
+        document.getElementById('request-regrade-button').addEventListener('click', showRegradeRequestModal);
+
+        function showRegradeRequestModal() {
+            const modal = document.getElementById('regrade-request-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideRegradeRequestModal() {
+            const modal = document.getElementById('regrade-request-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        // 提交申请逻辑 (TODO: 添加实际的提交API调用)
+        document.getElementById('regrade-request-modal').querySelector('form').addEventListener('submit', function(event) {
+            event.preventDefault(); // 阻止表单默认提交行为
+            const reason = document.getElementById('regrade-reason').value;
+            console.log('申请理由:', reason);
+            alert('申请已提交！(此为模拟)');
+            hideRegradeRequestModal();
+            // 这里可以添加实际的API调用来提交重审申请
+        });
+
+        // New: Rubric module functionality
+        if (gradingItemsList) {
+            gradingItemsList.addEventListener('click', (event) => {
+                const viewRubricBtn = event.target.closest('.view-rubric-btn');
+                if (viewRubricBtn) {
+                    const questionCard = viewRubricBtn.closest('.question-card');
+                    const rubricModule = questionCard.querySelector('.rubric-module');
+                    if (rubricModule) {
+                        rubricModule.classList.remove('hidden');
+                    }
+                }
+
+                const cancelRubricBtn = event.target.closest('.cancel-rubric-btn');
+                if (cancelRubricBtn) {
+                    const rubricModule = cancelRubricBtn.closest('.rubric-module');
+                    if (rubricModule) {
+                        rubricModule.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+    </script>
+
+</body>
+</html>

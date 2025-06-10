@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上课中</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles for the thin top nav bar */
+        .top-nav-thin {
+            height: 48px; /* Adjust as needed */
+            min-height: 48px;
+        }
+
+        /* Wrapper for the bottom control bar and toggle arrow */
+        .bottom-bar-container-wrapper {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%) translateY(100%); /* 默认完全隐藏 */
+            transition: transform 0.3s ease-out;
+            z-index: 50;
+            display: flex;
+            align-items: center; /* 改为居中对齐 */
+        }
+
+        /* 控制按钮样式 */
+        .control-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 51;
+            color: white;
+            transition: all 0.3s ease;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .control-button.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* Main control bar (buttons + separator) */
+        .bottom-control-bar {
+            width: fit-content;
+            padding: 6px 12px; /* 减小内边距 */
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px; /* 减小按钮间距 */
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 0.75rem; /* 减小文字大小 */
+            font-weight: 500;
+        }
+
+        /* Styles for the icon button part within each control item */
+        .icon-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px; /* 减小按钮尺寸 */
+            height: 48px;
+            border-radius: 0.75rem;
+            background-color: #343538;
+            transition: background-color 0.2s ease-in-out;
+            margin-bottom: 2px; /* 减小图标和文字间距 */
+        }
+
+        .icon-button:hover {
+            background-color: #47484B; /* Slightly lighter gray on hover */
+        }
+
+        .icon-button i {
+            font-size: 1.25rem; /* 减小图标大小 */
+            color: white;
+        }
+
+        /* Specific style for End Class button icon part */
+        .end-class-icon-button {
+            background-color: #D93025;
+            border-radius: 9999px;
+            width: 40px; /* 减小结束按钮尺寸 */
+            height: 40px;
+        }
+
+        .end-class-icon-button i {
+            color: #FF7369; /* Lighter red/orange for the icon */
+        }
+
+        .end-class-icon-button:hover {
+            background-color: #B3261C; /* Darker red on hover */
+        }
+
+        /* Toggle arrow button styling */
+        .toggle-arrow {
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease-out;
+            margin-left: 16px; /* Space between bar and arrow */
+            background-color: rgba(0, 0, 0, 0.8); /* Background for the arrow area */
+            border-radius: 9999px; /* Pill shape for arrow background */
+            padding: 8px 12px; /* Padding for arrow background */
+            pointer-events: all; /* Ensure arrow is clickable */
+            display: flex;
+            align-items: center;
+            height: 100%; /* 确保高度与父容器一致 */
+        }
+
+        .toggle-arrow i {
+            font-size: 1rem; /* 调整图标大小 */
+        }
+
+        .toggle-arrow.rotate-up {
+            transform: rotate(180deg);
+        }
+
+        /* 画布和聚光灯蒙层样式 */
+        #drawing-canvas {
+            background-color: transparent; /* 背景透明 */
+            z-index: 20;
+        }
+
+        .spotlight-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* 暗色蒙层 */
+            pointer-events: none; /* 允许鼠标事件穿透 */
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 20;
+        }
+
+        .spotlight-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
+
+    <!-- 顶部导航栏 -->
+    <header class="flex-shrink-0 bg-gray-800 text-gray-200 flex items-center justify-between px-6 top-nav-thin">
+        <div class="flex items-center">
+            <!-- 计时器 -->
+            <i class="fas fa-clock mr-2 text-primary"></i>
+            <span id="elapsed-time" class="font-medium">已上课 00:00:00</span>
+            <!-- AI 课堂纪要按钮 -->
+            <div class="ml-4 relative">
+                <button id="ai-summary-button" class="bg-gray-700 hover:bg-gray-600 text-white py-1 px-3 rounded-full text-sm flex items-center transition-colors duration-200" type="button">
+                    <i class="fas fa-book-open mr-2"></i>
+                    <span>纪要生成中</span>
+                    <!-- <i class="fas fa-chevron-down ml-2 text-xs" id="ai-summary-dropdown-toggle"></i> -->
+                </button>
+                <!-- AI 纪要状态下拉菜单 (模拟) -->
+                <!-- Removed dropdown as per new design -->
+                <!-- <div id="ai-summary-dropdown" class="absolute left-0 mt-2 w-32 bg-gray-700 rounded-md shadow-lg py-1 z-60 hidden">
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600" data-status="generating">纪要生成中</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600" data-status="completed">纪要已完成</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-600" data-status="paused">纪要已暂停</a>
+                </div> -->
+            </div>
+        </div>
+        <div class="flex-1 text-center">
+            <!-- 课程名称 + 班级 + 标题 -->
+            <h1 id="class-info" class="text-lg font-semibold truncate">[课程名称] - [班级班号] - [标题]</h1>
+        </div>
+        <div>
+            <!-- 其他顶部内容，如果需要 -->
+        </div>
+    </header>
+
+    <!-- 主内容区域 (PPT展示) -->
+    <main class="flex-1 flex items-center justify-center bg-gray-800 relative overflow-hidden">
+        <div class="text-gray-400 text-2xl font-medium">
+            PPT展示区域
+            <div class="text-sm mt-2">（这里将显示课程PPT内容）</div>
+        </div>
+
+        <!-- 画布用于板书 -->
+        <canvas id="drawing-canvas" class="absolute inset-0 z-20"></canvas>
+
+        <!-- 聚光灯蒙层 -->
+        <div id="spotlight-overlay" class="spotlight-overlay"></div>
+
+        <!-- 下载按钮，类似作业批改页面 -->
+        <button class="absolute bottom-6 right-6 bg-primary hover:bg-primary/90 text-white p-3 rounded-full shadow-lg transition-all duration-200" type="button">
+            <i class="fas fa-download text-xl"></i>
+        </button>
+    </main>
+
+    <!-- 控制按钮 -->
+    <div class="control-button" id="control-button">
+        <i class="fas fa-chevron-up"></i>
+    </div>
+
+    <!-- 底部控制栏区域 -->
+    <div class="bottom-bar-container-wrapper" id="bottom-bar-container-wrapper">
+        <div id="bottom-control-bar" class="bottom-control-bar">
+            <div class="control-item" id="courseware-item">
+                <button type="button" class="icon-button">
+                    <i class="fas fa-file-alt"></i>
+                </button>
+                <span>课件</span>
+            </div>
+            <div class="control-item" id="interaction-item">
+                <button type="button" class="icon-button">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <span>课堂互动</span>
+            </div>
+            <div class="control-item" id="more-item">
+                <button type="button" class="icon-button">
+                    <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <span>更多</span>
+            </div>
+            <div class="h-8 border-l border-gray-700 mx-2"></div> <!-- 分隔线 -->
+            <div class="control-item" id="end-class-item">
+                <button class="icon-button end-class-icon-button" type="button">
+                    <i class="fas fa-power-off"></i>
+                </button>
+                <span>结束授课</span>
+            </div>
+        </div>
+        <div class="toggle-arrow" id="toggle-bottom-bar">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </div>
+
+    <!-- 课件选择模态框 -->
+    <div id="courseware-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-6 sm:p-8 max-w-2xl w-full mx-4 shadow-xl transform transition-all relative text-white">
+            <h3 class="text-xl font-semibold mb-6">课件选择</h3>
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-white" onclick="hideCoursewareModal()" type="button">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <!-- 本地课件 -->
+                <div class="flex flex-col items-center p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors duration-200">
+                    <i class="fas fa-folder-open text-4xl mb-3"></i>
+                    <span class="font-medium text-lg mb-1">本地课件</span>
+                    <p class="text-gray-400 text-sm text-center">支持.pptx, .ppt, .pdf格式</p>
+                </div>
+                <!-- 课件库 -->
+                <div class="flex flex-col items-center p-4 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors duration-200">
+                    <i class="fas fa-book-open text-4xl mb-3"></i>
+                    <span class="font-medium text-lg mb-1">课件库</span>
+                    <p class="text-gray-400 text-sm text-center">导入此课程下您已上传的课件</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 课堂互动模态框 -->
+    <div id="interaction-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-6 sm:p-8 max-w-lg w-full mx-4 shadow-xl transform transition-all relative text-white">
+            <h3 class="text-xl font-semibold mb-6">课堂互动</h3>
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-white" onclick="hideInteractionModal()" type="button">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="grid grid-cols-4 gap-4">
+                <!-- 弹幕按钮 -->
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors duration-200" id="barrage-toggle">
+                    <i class="fas fa-comment-dots text-2xl mb-2"></i>
+                    <span class="text-sm">弹幕 (关)</span>
+                </div>
+                <!-- 发布问题按钮 -->
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors duration-200" id="post-question-button">
+                    <i class="fas fa-question-circle text-2xl mb-2"></i>
+                    <span class="text-sm">发布问题</span>
+                </div>
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors duration-200" id="chalkboard-toggle">
+                    <i class="fas fa-chalkboard text-2xl mb-2"></i>
+                    <span class="text-sm">板书</span>
+                </div>
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors duration-200" id="screenshot-button">
+                    <i class="fas fa-crop-alt text-2xl mb-2"></i>
+                    <span class="text-sm">截图</span>
+                </div>
+                <div class="flex flex-col items-center p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors duration-200" id="spotlight-toggle">
+                    <i class="fas fa-lightbulb text-2xl mb-2"></i>
+                    <span class="text-sm">聚光灯</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 发布问题模态框 -->
+    <div id="post-question-modal" class="fixed top-0 bottom-0 right-0 w-96 bg-black/50 z-50 transform translate-x-full transition-transform duration-300 ease-out hidden">
+        <div class="bg-gray-800 h-full p-6 sm:p-8 relative shadow-xl text-white">
+            <h3 class="text-xl font-semibold mb-4" id="post-question-modal-title">发布问题</h3>
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-white" onclick="hidePostQuestionModal()" type="button">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+
+            <div class="flex flex-col h-full">
+                <!-- Tabs for Manual/Import/Statistics -->
+                <div class="flex mb-4 border-b border-gray-600">
+                    <button id="manual-tab" class="px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-500 bg-gray-700 hover:bg-gray-600 transition-colors duration-200">手动设置</button>
+                    <button id="import-tab" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white hover:border-gray-400 transition-colors duration-200">问题库导入</button>
+                    <button id="statistics-tab" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white hover:border-gray-400 transition-colors duration-200 hidden">答案统计</button>
+                </div>
+
+                <!-- Manual Setting Content -->
+                <div id="manual-content" class="flex-1 overflow-y-auto pr-2 space-y-4">
+                    <!-- Question Type Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">问题类型:</label>
+                        <div class="flex space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" class="form-radio text-blue-500" name="question-type" value="multiple-choice" checked>
+                                <span class="ml-2 text-gray-300">选择题</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" class="form-radio text-blue-500" name="question-type" value="fill-in-the-blank">
+                                <span class="ml-2 text-gray-300">填空题</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Question Text -->
+                    <div>
+                        <label for="question-text" class="block text-sm font-medium text-gray-300 mb-2">问题内容:</label>
+                        <textarea id="question-text" class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-y" rows="3" placeholder="请输入问题内容..."></textarea>
+                    </div>
+
+                    <!-- Options for Multiple Choice -->
+                    <div id="multiple-choice-options" class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">选项:</label>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-300 font-bold">A.</span>
+                            <input type="text" class="option-input w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="选项 A 内容">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-300 font-bold">B.</span>
+                            <input type="text" class="option-input w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="选项 B 内容">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-300 font-bold">C.</span>
+                            <input type="text" class="option-input w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="选项 C 内容">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-300 font-bold">D.</span>
+                            <input type="text" class="option-input w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="选项 D 内容">
+                        </div>
+                    </div>
+
+                    <!-- Answer for Fill-in-the-Blank -->
+                    <div id="fill-in-the-blank-answer" class="hidden">
+                        <label for="blank-answer" class="block text-sm font-medium text-gray-300 mb-2">参考答案 (可选):</label>
+                        <input type="text" id="blank-answer" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入填空答案 (可选)">
+                    </div>
+                </div>
+
+                <!-- Question Bank Import Content -->
+                <div id="import-content" class="flex-1 overflow-y-auto pr-2 space-y-4 hidden">
+                    <p class="text-gray-400 text-sm mb-4">从问题库中选择一个问题导入。</p>
+                    <!-- Search Bar -->
+                    <div class="relative mb-4">
+                        <input type="text" id="question-bank-search" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 pl-10 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="搜索问题...">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <!-- Question List (Sample) -->
+                    <div id="question-bank-list" class="space-y-3">
+                        <!-- Sample Question 1 -->
+                        <div class="question-bank-item bg-gray-700 p-3 rounded-md cursor-pointer hover:bg-gray-600 transition-colors duration-200" data-question-type="multiple-choice" data-question-text="以下哪个是正确的HTML标签？" data-options='[{"label":"A","value":"<p>"}, {"label":"B","value":"<div>"}, {"label":"C","value":"<span>"}]' data-correct-answer="A">
+                            <p class="text-sm font-medium text-white mb-1">Q: 以下哪个是正确的HTML标签？</p>
+                            <p class="text-xs text-gray-400">类型: 选择题</p>
+                        </div>
+                        <!-- Sample Question 2 -->
+                        <div class="question-bank-item bg-gray-700 p-3 rounded-md cursor-pointer hover:bg-gray-600 transition-colors duration-200" data-question-type="fill-in-the-blank" data-question-text="Python是一种______编程语言。" data-answer="解释型">
+                            <p class="text-sm font-medium text-white mb-1">Q: Python是一种______编程语言。</p>
+                            <p class="text-xs text-gray-400">类型: 填空题</p>
+                        </div>
+                        <div class="question-bank-item bg-gray-700 p-3 rounded-md cursor-pointer hover:bg-gray-600 transition-colors duration-200" data-question-type="multiple-choice" data-question-text="在CSS中，用于设置文本颜色的属性是？" data-options='[{"label":"A","value":"background-color"}, {"label":"B","value":"color"}, {"label":"C","value":"font-color"}]'>
+                            <p class="text-sm font-medium text-white mb-1">Q: 在CSS中，用于设置文本颜色的属性是？</p>
+                            <p class="text-xs text-gray-400">类型: 选择题</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Content -->
+                <div id="statistics-content" class="flex-1 overflow-y-auto pr-2 space-y-4 hidden">
+                    <h4 class="text-lg font-semibold text-gray-200 mb-4" id="current-question-display">问题内容:</h4>
+                    <!-- Pie Chart for Multiple Choice -->
+                    <div id="pie-chart-container" class="hidden">
+                        <canvas id="pie-chart" width="200" height="200"></canvas>
+                        <div id="pie-chart-legend" class="flex flex-wrap justify-center text-sm mt-4"></div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">公布正确答案:</label>
+                            <div class="flex space-x-2" id="correct-answer-selection">
+                                <!-- Options will be populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Word Cloud for Fill-in-the-Blank -->
+                    <div id="word-cloud-container" class="hidden">
+                        <p class="text-gray-400 text-sm mb-2">学生回答:</p>
+                        <div id="word-cloud-display" class="bg-gray-700 p-3 rounded-md text-sm text-gray-300 flex flex-wrap gap-2"></div>
+                        <div class="mt-4">
+                            <label for="teacher-set-answer" class="block text-sm font-medium text-gray-300 mb-2">教师设置答案:</label>
+                            <input type="text" id="teacher-set-answer" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="设置正确答案 (可选)">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center mt-4">
+                        <button id="end-question-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 rounded-md transition-colors duration-200" type="button">
+                            结束问题
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Publish Button (only visible in manual/import tabs) -->
+                <button id="post-question-submit-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-md transition-colors duration-200 mt-4" type="button">
+                    发布
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 会议纪要模态框 -->
+    <div id="ai-summary-modal" class="fixed top-0 left-0 h-screen w-96 bg-gray-800 bg-opacity-95 z-50 transform -translate-x-full transition-transform duration-300 ease-out hidden pointer-events-none">
+        <div class="relative h-full flex flex-col p-6 sm:p-8 text-white shadow-xl pointer-events-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">AI会议纪要</h3>
+                <button class="text-gray-400 hover:text-white" onclick="hideAiSummaryModal()" type="button">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- AI 纪要生成状态 -->
+            <div class="flex items-center mb-4 text-gray-300">
+                <i class="fas fa-sparkles text-lg mr-2 text-blue-400"></i>
+                <span id="ai-summary-status-text">为您生成会议纪要...</span>
+                <span class="ml-auto text-sm text-gray-400" id="ai-summary-progress-text">生成中</span>
+            </div>
+
+            <p class="text-gray-400 text-sm mb-6" id="ai-summary-info-text">会议纪要生成中，请稍等片刻</p>
+
+            <!-- Loading/Skeleton content -->
+            <div id="ai-summary-loading-content" class="space-y-4 flex-1 overflow-y-auto pr-2">
+                <div class="h-4 bg-gray-700 rounded w-full animate-pulse"></div>
+                <div class="h-4 bg-gray-700 rounded w-5/6 animate-pulse"></div>
+                <div class="h-4 bg-gray-700 rounded w-full animate-pulse"></div>
+                <div class="h-4 bg-gray-700 rounded w-3/4 animate-pulse"></div>
+            </div>
+
+            <!-- Summary Display content (initially hidden) -->
+            <div id="ai-summary-display-content" class="flex-1 overflow-y-auto pr-2 hidden">
+                <p class="text-gray-300 text-sm leading-relaxed mb-4">
+                    本次课程主要围绕HTML基础标签、CSS样式设置以及简单的JavaScript交互展开。
+                    老师详细讲解了`&lt;p&gt;`、`&lt;div&gt;`、`&lt;span&gt;`等常用HTML标签的语义和用法。
+                    CSS部分着重介绍了`background-color`、`color`、`font-size`等属性的应用，
+                    并通过实例演示了如何为元素添加样式。在JavaScript环节，
+                    老师介绍了`setInterval`函数用于定时更新页面内容，以及如何通过`addEventListener`
+                    处理用户事件，例如鼠标悬停和点击。课堂互动环节，
+                    老师发布了选择题和填空题，学生积极参与，
+                    通过饼图和词云图实时展示了回答情况。
+                </p>
+                <p class="text-gray-300 text-sm leading-relaxed">
+                    此外，课堂上还演示了板书和聚光灯功能，方便教师在授课过程中进行重点标记和补充说明。
+                    学生提问环节，老师鼓励大家积极思考并进行互动。
+                    最后，课程在愉快的氛围中结束，布置了相关作业，要求学生巩固所学知识。
+                </p>
+                <button id="copy-summary-button" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md transition-colors duration-200" type="button">
+                    <i class="fas fa-copy mr-2"></i> 复制纪要
+                </button>
+            </div>
+
+            <!-- 底部停止按钮 -->
+            <div class="mt-8 flex justify-center">
+                <button id="stop-ai-summary-button" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-3 rounded-md transition-colors duration-200" type="button">
+                    停止
+                </button>
+            </div>
+
+            <!-- 新增：模态框内部的状态切换按钮 -->
+            <div class="mt-4 flex flex-wrap justify-center gap-2">
+                <button id="set-generating" class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded-md text-xs" type="button">模拟生成中</button>
+                <button id="set-completed" class="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded-md text-xs" type="button">模拟已完成</button>
+                <button id="set-paused" class="bg-yellow-600 hover:bg-yellow-700 text-white py-1 px-3 rounded-md text-xs" type="button">模拟已暂停</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let classStartTime;
+        let timerInterval;
+
+        function startTimer() {
+            classStartTime = new Date();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const elapsedMilliseconds = now - classStartTime;
+            const hours = Math.floor(elapsedMilliseconds / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsedMilliseconds % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsedMilliseconds % (1000 * 60)) / 1000);
+
+            const formattedTime = 
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+
+            document.getElementById('elapsed-time').textContent = `已上课 ${formattedTime}`;
+        }
+
+        // 获取URL参数并更新页面信息
+        function updateClassInfoFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const courseName = urlParams.get('courseName') || '未知课程';
+            const classCode = urlParams.get('classCode') || '未知班级';
+            const classTitle = urlParams.get('classTitle') || '未知标题';
+
+            document.getElementById('class-info').textContent = `${courseName} - ${classCode} - ${classTitle}`;
+        }
+
+        // 底部控制栏显示/隐藏逻辑
+        const controlButton = document.getElementById('control-button');
+        const bottomBarContainerWrapper = document.getElementById('bottom-bar-container-wrapper');
+        const toggleBottomBarButton = document.getElementById('toggle-bottom-bar');
+        const toggleArrowIcon = toggleBottomBarButton.querySelector('i');
+        const controlButtonIcon = controlButton.querySelector('i');
+
+        let isBarVisible = false;
+
+        // 隐藏控制栏
+        function hideControlBar() {
+            bottomBarContainerWrapper.style.transform = 'translateX(-50%) translateY(100%)';
+            controlButtonIcon.classList.remove('fa-chevron-down');
+            controlButtonIcon.classList.add('fa-chevron-up');
+            isBarVisible = false;
+            controlButton.classList.remove('hidden'); // 显示控制按钮
+        }
+
+        // 显示控制栏
+        function showControlBar() {
+            bottomBarContainerWrapper.style.transform = 'translateX(-50%) translateY(0)';
+            controlButtonIcon.classList.remove('fa-chevron-up');
+            controlButtonIcon.classList.add('fa-chevron-down');
+            isBarVisible = true;
+            controlButton.classList.add('hidden'); // 隐藏控制按钮
+        }
+
+        // 控制按钮点击事件
+        controlButton.addEventListener('click', () => {
+            if (isBarVisible) {
+                hideControlBar();
+            } else {
+                showControlBar();
+            }
+        });
+
+        // 点击箭头按钮切换显示状态
+        toggleBottomBarButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isBarVisible) {
+                hideControlBar();
+            } else {
+                showControlBar();
+            }
+        });
+
+        // 点击控制项时保持控制栏显示
+        document.getElementById('courseware-item').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlBar();
+            showCoursewareModal();
+        });
+
+        document.getElementById('interaction-item').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlBar();
+            showInteractionModal();
+        });
+
+        document.getElementById('more-item').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showControlBar();
+            alert('更多功能即将上线！');
+        });
+
+        document.getElementById('end-class-item').addEventListener('click', (e) => {
+             e.stopPropagation();
+             // The actual end class logic is on the icon button
+             document.querySelector('#end-class-item .end-class-icon-button').click();
+        });
+
+        // 页面加载时的初始状态
+        document.addEventListener('DOMContentLoaded', () => {
+            updateClassInfoFromUrl();
+            startTimer();
+            hideControlBar(); // 初始状态：隐藏
+        });
+
+        // End class button click event
+        document.querySelector('#end-class-item .end-class-icon-button').addEventListener('click', () => {
+            if (confirm('确定要结束本次授课吗？')) {
+                clearInterval(timerInterval); // Stop timer
+                alert('授课已结束！');
+                window.location.href = 'stduent_class_details.html';
+            }
+        });
+
+        // 课件选择模态框功能
+        function showCoursewareModal() {
+            document.getElementById('courseware-modal').classList.remove('hidden');
+        }
+
+        function hideCoursewareModal() {
+            document.getElementById('courseware-modal').classList.add('hidden');
+        }
+
+        document.getElementById('courseware-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                hideCoursewareModal();
+            }
+        });
+
+        // 课堂互动模态框功能
+        function showInteractionModal() {
+            document.getElementById('interaction-modal').classList.remove('hidden');
+        }
+
+        function hideInteractionModal() {
+            document.getElementById('interaction-modal').classList.add('hidden');
+        }
+
+        document.getElementById('interaction-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                hideInteractionModal();
+            }
+        });
+
+        // 弹幕按钮切换功能
+        const barrageToggleButton = document.getElementById('barrage-toggle');
+        let isBarrageOn = false; // 默认关闭
+
+        barrageToggleButton.addEventListener('click', () => {
+            isBarrageOn = !isBarrageOn;
+            const barrageText = barrageToggleButton.querySelector('span');
+            const barrageIcon = barrageToggleButton.querySelector('i');
+
+            if (isBarrageOn) {
+                barrageText.textContent = '弹幕 (开)';
+                barrageIcon.classList.remove('fa-comment-dots');
+                barrageIcon.classList.add('fa-comments');
+                barrageToggleButton.classList.add('bg-blue-600');
+                barrageToggleButton.classList.remove('bg-gray-700');
+                console.log('弹幕已开启');
+            } else {
+                barrageText.textContent = '弹幕 (关)';
+                barrageIcon.classList.remove('fa-comments');
+                barrageIcon.classList.add('fa-comment-dots');
+                barrageToggleButton.classList.remove('bg-blue-600');
+                barrageToggleButton.classList.add('bg-gray-700');
+                console.log('弹幕已关闭');
+            }
+        });
+
+        // 发布问题按钮功能
+        const postQuestionButton = document.getElementById('post-question-button');
+        const postQuestionModal = document.getElementById('post-question-modal');
+        const postQuestionModalTitle = document.getElementById('post-question-modal-title');
+        const postQuestionTextarea = document.getElementById('question-text');
+        const postQuestionSubmitButton = document.getElementById('post-question-submit-button');
+
+        const manualTabButton = document.getElementById('manual-tab');
+        const importTabButton = document.getElementById('import-tab');
+        const statisticsTabButton = document.getElementById('statistics-tab');
+        const manualContent = document.getElementById('manual-content');
+        const importContent = document.getElementById('import-content');
+        const statisticsContent = document.getElementById('statistics-content');
+
+        const questionTypeRadios = document.querySelectorAll('input[name="question-type"]');
+        const multipleChoiceOptionsDiv = document.getElementById('multiple-choice-options');
+        const fillInTheBlankAnswerDiv = document.getElementById('fill-in-the-blank-answer');
+        const optionInputs = document.querySelectorAll('.option-input');
+        const blankAnswerInput = document.getElementById('blank-answer');
+
+        const questionBankList = document.getElementById('question-bank-list');
+
+        const currentQuestionDisplay = document.getElementById('current-question-display');
+        const pieChartCanvas = document.getElementById('pie-chart');
+        const pieChartCtx = pieChartCanvas.getContext('2d');
+        const pieChartLegend = document.getElementById('pie-chart-legend');
+        const correctAnswerSelectionDiv = document.getElementById('correct-answer-selection');
+        const wordCloudDisplay = document.getElementById('word-cloud-display');
+        const teacherSetAnswerInput = document.getElementById('teacher-set-answer');
+        const endQuestionButton = document.getElementById('end-question-button');
+
+        let currentPublishedQuestion = null; // 用于存储当前发布的问题数据
+        let statisticsInterval = null; // 用于统计数据刷新的定时器
+
+        function showPostQuestionModal() {
+            hideInteractionModal(); // 自动关闭课堂互动窗口
+            postQuestionModal.classList.remove('hidden');
+            postQuestionModal.classList.remove('translate-x-full');
+            postQuestionModal.classList.add('translate-x-0');
+            // 默认显示手动设置，并重置表单
+            showManualTab();
+            resetPostQuestionForm();
+            postQuestionModalTitle.textContent = '发布问题';
+            postQuestionSubmitButton.classList.remove('hidden'); // 确保发布按钮可见
+            statisticsTabButton.classList.add('hidden'); // 隐藏统计tab
+        }
+
+        function hidePostQuestionModal() {
+            postQuestionModal.classList.remove('translate-x-0');
+            postQuestionModal.classList.add('translate-x-full');
+            postQuestionModal.addEventListener('transitionend', function handler() {
+                postQuestionModal.classList.add('hidden');
+                postQuestionModal.removeEventListener('transitionend', handler);
+            }, { once: true });
+            resetPostQuestionForm(); // 隐藏时清空所有字段
+            stopStatistics(); // 停止统计刷新
+        }
+
+        function resetPostQuestionForm() {
+            postQuestionTextarea.value = '';
+            optionInputs.forEach(input => input.value = '');
+            blankAnswerInput.value = '';
+            // 默认选中选择题，并显示相应区域
+            document.querySelector('input[name="question-type"][value="multiple-choice"]').checked = true;
+            toggleQuestionTypeFields();
+            currentPublishedQuestion = null; // 清空当前发布的问题
+        }
+
+        function showManualTab() {
+            manualTabButton.classList.add('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            manualTabButton.classList.remove('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+            importTabButton.classList.remove('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            importTabButton.classList.add('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+            statisticsTabButton.classList.remove('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            statisticsTabButton.classList.add('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+
+            manualContent.classList.remove('hidden');
+            importContent.classList.add('hidden');
+            statisticsContent.classList.add('hidden');
+
+            postQuestionSubmitButton.classList.remove('hidden'); // 发布按钮在手动/导入模式下可见
+            postQuestionModalTitle.textContent = '发布问题';
+        }
+
+        function showImportTab() {
+            importTabButton.classList.add('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            importTabButton.classList.remove('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+            manualTabButton.classList.remove('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            manualTabButton.classList.add('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+            statisticsTabButton.classList.remove('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            statisticsTabButton.classList.add('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+
+            importContent.classList.remove('hidden');
+            manualContent.classList.add('hidden');
+            statisticsContent.classList.add('hidden');
+            
+            postQuestionSubmitButton.classList.remove('hidden');
+            postQuestionModalTitle.textContent = '发布问题';
+        }
+
+        function showStatisticsTab() {
+            statisticsTabButton.classList.add('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            statisticsTabButton.classList.remove('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+            manualTabButton.classList.remove('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            manualTabButton.classList.add('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+            importTabButton.classList.remove('border-blue-500', 'text-blue-500', 'bg-gray-700');
+            importTabButton.classList.add('border-transparent', 'text-gray-400', 'hover:text-white', 'hover:border-gray-400');
+
+            statisticsContent.classList.remove('hidden');
+            manualContent.classList.add('hidden');
+            importContent.classList.add('hidden');
+
+            postQuestionSubmitButton.classList.add('hidden'); // 发布按钮在统计模式下隐藏
+            postQuestionModalTitle.textContent = '答案统计';
+        }
+
+        function toggleQuestionTypeFields() {
+            const selectedType = document.querySelector('input[name="question-type"]:checked').value;
+            if (selectedType === 'multiple-choice') {
+                multipleChoiceOptionsDiv.classList.remove('hidden');
+                fillInTheBlankAnswerDiv.classList.add('hidden');
+            } else if (selectedType === 'fill-in-the-blank') {
+                multipleChoiceOptionsDiv.classList.add('hidden');
+                fillInTheBlankAnswerDiv.classList.remove('hidden');
+            }
+        }
+
+        // 发布问题核心逻辑
+        function publishQuestion(questionData) {
+            currentPublishedQuestion = questionData;
+            currentQuestionDisplay.textContent = `问题内容: ${questionData.text}`;
+            showStatisticsTab(); // 切换到统计页面
+            statisticsTabButton.classList.remove('hidden'); // 统计tab可见
+            startStatistics(); // 开始模拟统计数据刷新
+        }
+
+        function startStatistics() {
+            stopStatistics(); // 确保没有重复的定时器
+
+            if (currentPublishedQuestion.type === 'multiple-choice') {
+                document.getElementById('pie-chart-container').classList.remove('hidden');
+                document.getElementById('word-cloud-container').classList.add('hidden');
+                // 初始化正确答案选择区域
+                populateCorrectAnswerSelection(currentPublishedQuestion.options);
+
+                let optionsData = currentPublishedQuestion.options.map(opt => ({ ...opt, count: 0 }));
+                const colors = ['#4CAF50', '#2196F3', '#FFC107', '#F44336']; // 选项颜色
+
+                statisticsInterval = setInterval(() => {
+                    // 模拟学生回答：随机增加某个选项的计数
+                    const randomIndex = Math.floor(Math.random() * optionsData.length);
+                    optionsData[randomIndex].count++;
+
+                    // 绘制饼图
+                    drawPieChart(optionsData, colors);
+
+                    // 更新图例
+                    updatePieChartLegend(optionsData, colors);
+                }, 1000); // 每秒刷新
+
+            } else if (currentPublishedQuestion.type === 'fill-in-the-blank') {
+                document.getElementById('pie-chart-container').classList.add('hidden');
+                document.getElementById('word-cloud-container').classList.remove('hidden');
+                // 清空旧的答案
+                wordCloudDisplay.innerHTML = '';
+                teacherSetAnswerInput.value = currentPublishedQuestion.answer || '';
+
+                let simulatedAnswers = [];
+                const possibleWords = ['是的', '正确', '不是', '错误', '可能', '对', '错', '不确定'];
+
+                statisticsInterval = setInterval(() => {
+                    // 模拟学生回答：随机添加一个词
+                    const randomWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+                    simulatedAnswers.push(randomWord);
+                    updateWordCloud(simulatedAnswers);
+                }, 1500); // 1.5秒刷新
+            }
+        }
+
+        function stopStatistics() {
+            if (statisticsInterval) {
+                clearInterval(statisticsInterval);
+                statisticsInterval = null;
+            }
+        }
+
+        function drawPieChart(data, colors) {
+            const total = data.reduce((sum, item) => sum + item.count, 0);
+            let startAngle = 0;
+            pieChartCtx.clearRect(0, 0, pieChartCanvas.width, pieChartCanvas.height);
+            pieChartCtx.beginPath();
+            pieChartCtx.arc(100, 100, 90, 0, Math.PI * 2); // 画布中心 (100,100), 半径90
+            pieChartCtx.fillStyle = '#343538'; // 背景色
+            pieChartCtx.fill();
+
+            data.forEach((item, i) => {
+                const sliceAngle = (item.count / total) * Math.PI * 2;
+                pieChartCtx.fillStyle = colors[i % colors.length];
+                pieChartCtx.beginPath();
+                pieChartCtx.moveTo(100, 100);
+                pieChartCtx.arc(100, 100, 90, startAngle, startAngle + sliceAngle);
+                pieChartCtx.closePath();
+                pieChartCtx.fill();
+
+                // 绘制文字 (数量和百分比)
+                const midAngle = startAngle + sliceAngle / 2;
+                const textX = 100 + Math.cos(midAngle) * 60;
+                const textY = 100 + Math.sin(midAngle) * 60;
+                pieChartCtx.fillStyle = 'white';
+                pieChartCtx.textAlign = 'center';
+                pieChartCtx.textBaseline = 'middle';
+                pieChartCtx.font = '12px Arial';
+                if (item.count > 0) {
+                    pieChartCtx.fillText(`${item.count} (${((item.count / total) * 100).toFixed(0)}%)`, textX, textY);
+                }
+
+                startAngle += sliceAngle;
+            });
+        }
+
+        function updatePieChartLegend(data, colors) {
+            pieChartLegend.innerHTML = '';
+            data.forEach((item, i) => {
+                const legendItem = document.createElement('div');
+                legendItem.classList.add('flex', 'items-center', 'mr-4', 'mb-2');
+                legendItem.innerHTML = `
+                    <span style="display:inline-block; width:12px; height:12px; background-color:${colors[i % colors.length]}; border-radius:3px; margin-right:8px;"></span>
+                    <span class="text-gray-300">${item.label}. ${item.value} (${item.count}人)</span>
+                `;
+                pieChartLegend.appendChild(legendItem);
+            });
+        }
+
+        function populateCorrectAnswerSelection(options) {
+            correctAnswerSelectionDiv.innerHTML = '';
+            options.forEach(option => {
+                const radioId = `correct-option-${option.label}`;
+                const labelHtml = `
+                    <label class="inline-flex items-center bg-gray-700 px-3 py-1 rounded-md cursor-pointer hover:bg-gray-600 transition-colors duration-200">
+                        <input type="radio" class="form-radio text-green-500" name="final-correct-answer" value="${option.label}" id="${radioId}">
+                        <span class="ml-2 text-gray-300">${option.label}. ${option.value}</span>
+                    </label>
+                `;
+                correctAnswerSelectionDiv.insertAdjacentHTML('beforeend', labelHtml);
+            });
+
+            correctAnswerSelectionDiv.addEventListener('change', (e) => {
+                if (e.target.name === 'final-correct-answer') {
+                    const selectedAnswer = e.target.value;
+                    alert(`正确答案已设置为：${selectedAnswer}`);
+                    if (currentPublishedQuestion) {
+                        currentPublishedQuestion.correct_answer = selectedAnswer;
+                        console.log('正确答案已设置:', currentPublishedQuestion);
+                    }
+                }
+            }, { once: true }); // 只监听一次，避免重复事件
+        }
+
+        function updateWordCloud(answers) {
+            wordCloudDisplay.innerHTML = '';
+            // 简单模拟词频，并显示在页面上
+            const wordCounts = {};
+            answers.forEach(word => {
+                wordCounts[word] = (wordCounts[word] || 0) + 1;
+            });
+
+            // 按词频排序，并限制显示数量
+            const sortedWords = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]);
+            sortedWords.slice(0, 10).forEach(([word, count]) => {
+                const span = document.createElement('span');
+                span.classList.add('bg-blue-700', 'text-white', 'px-2', 'py-1', 'rounded-full', 'text-xs', 'font-medium');
+                // 根据词频调整大小（简单模拟）
+                span.style.fontSize = `${10 + count * 2}px`; 
+                span.textContent = `${word} (${count})`;
+                wordCloudDisplay.appendChild(span);
+            });
+        }
+
+        // 事件监听器
+        postQuestionButton.addEventListener('click', () => {
+            showPostQuestionModal();
+        });
+
+        postQuestionModal.addEventListener('click', (e) => {
+            if (e.target === postQuestionModal) {
+                hidePostQuestionModal();
+            }
+        });
+
+        manualTabButton.addEventListener('click', showManualTab);
+        importTabButton.addEventListener('click', showImportTab);
+        statisticsTabButton.addEventListener('click', showStatisticsTab); // 允许手动切换回统计页面（如果已经发布问题）
+
+        questionTypeRadios.forEach(radio => {
+            radio.addEventListener('change', toggleQuestionTypeFields);
+        });
+
+        // 点击"发布"按钮的逻辑
+        postQuestionSubmitButton.addEventListener('click', () => {
+            const questionText = postQuestionTextarea.value.trim();
+            const selectedType = document.querySelector('input[name="question-type"]:checked').value;
+            let questionData = {};
+
+            if (!questionText) {
+                alert('请输入问题内容！');
+                return;
+            }
+
+            if (selectedType === 'multiple-choice') {
+                const options = [];
+                let allOptionsEmpty = true;
+                optionInputs.forEach((input, index) => {
+                    const label = String.fromCharCode(65 + index); // A, B, C, D
+                    const optionValue = input.value.trim();
+                    if (optionValue) {
+                        options.push({ label: label, value: optionValue });
+                        allOptionsEmpty = false;
+                    }
+                });
+
+                if (options.length < 2) {
+                    alert('选择题至少需要两个选项！');
+                    return;
+                }
+                questionData = { type: selectedType, text: questionText, options: options };
+
+            } else if (selectedType === 'fill-in-the-blank') {
+                const answer = blankAnswerInput.value.trim(); // 答案现在是可选的，可以不填
+                questionData = { type: selectedType, text: questionText, answer: answer };
+            }
+
+            // 校验通过，发布问题并切换到统计页面
+            publishQuestion(questionData);
+        });
+
+        // 问题库导入功能 - 直接发布，并带上正确答案
+        questionBankList.addEventListener('click', (e) => {
+            const selectedItem = e.target.closest('.question-bank-item');
+            if (selectedItem) {
+                const questionType = selectedItem.dataset.questionType;
+                const questionText = selectedItem.dataset.questionText;
+                let questionData = { type: questionType, text: questionText };
+
+                if (questionType === 'multiple-choice') {
+                    const optionsData = JSON.parse(selectedItem.dataset.options);
+                    const correctAnswer = selectedItem.dataset.correctAnswer; // 从data-attribute获取正确答案
+                    questionData.options = optionsData;
+                    questionData.correct_answer = correctAnswer;
+                } else if (questionType === 'fill-in-the-blank') {
+                    questionData.answer = selectedItem.dataset.answer;
+                }
+                
+                publishQuestion(questionData); // 直接发布
+            }
+        });
+
+        // 结束问题按钮逻辑
+        endQuestionButton.addEventListener('click', () => {
+            stopStatistics(); // 停止统计刷新
+            alert('问题已结束，统计数据已保存！'); // 模拟保存
+            hidePostQuestionModal(); // 关闭模态框
+        });
+
+        // 初始化时调用一次，确保正确显示默认类型（选择题）
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleQuestionTypeFields();
+            // 确保统计tab在初始化时是隐藏的
+            statisticsTabButton.classList.add('hidden'); 
+        });
+
+        // 板书功能
+        const drawingCanvas = document.getElementById('drawing-canvas');
+        const ctx = drawingCanvas.getContext('2d');
+        const chalkboardToggleButton = document.getElementById('chalkboard-toggle');
+        const mainContentArea = document.querySelector('main');
+
+        let isDrawingMode = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // 设置画布大小以匹配其父容器
+        function resizeCanvas() {
+            drawingCanvas.width = mainContentArea.clientWidth;
+            drawingCanvas.height = mainContentArea.clientHeight;
+            // 每次调整大小后重设绘图样式
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+        }
+
+        // 初始化时和窗口大小改变时调整画布
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function startDrawing(e) {
+            if (!isDrawingMode) return;
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+
+        function draw(e) {
+            if (!isDrawingMode || !isDrawing) return;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        chalkboardToggleButton.addEventListener('click', () => {
+            isDrawingMode = !isDrawingMode;
+            if (isDrawingMode) {
+                drawingCanvas.classList.remove('hidden');
+                drawingCanvas.style.pointerEvents = 'auto'; // 允许鼠标事件在画布上
+                chalkboardToggleButton.classList.add('bg-blue-600');
+                chalkboardToggleButton.classList.remove('bg-gray-700');
+                console.log('板书模式已开启');
+                // 确保聚光灯关闭
+                if (isSpotlightMode) {
+                    toggleSpotlightMode();
+                }
+            } else {
+                drawingCanvas.classList.add('hidden');
+                drawingCanvas.style.pointerEvents = 'none'; // 禁用鼠标事件在画布上
+                chalkboardToggleButton.classList.remove('bg-blue-600');
+                chalkboardToggleButton.classList.add('bg-gray-700');
+                console.log('板书模式已关闭');
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height); // 清除所有绘图
+            }
+            hideInteractionModal();
+        });
+
+        drawingCanvas.addEventListener('mousedown', startDrawing);
+        drawingCanvas.addEventListener('mousemove', draw);
+        drawingCanvas.addEventListener('mouseup', stopDrawing);
+        drawingCanvas.addEventListener('mouseout', stopDrawing); // 鼠标移出至首页画布时也停止绘图
+        
+        // 鼠标右键关闭板书模式
+        drawingCanvas.addEventListener('contextmenu', (e) => {
+            if (isDrawingMode) {
+                e.preventDefault(); // 阻止默认右键菜单
+                toggleChalkboardMode();
+            }
+        });
+
+        // 截图功能
+        document.getElementById('screenshot-button').addEventListener('click', () => {
+            alert('截图功能待实现！');
+            hideInteractionModal();
+        });
+
+        // 聚光灯功能
+        const spotlightOverlay = document.getElementById('spotlight-overlay');
+        const spotlightToggleButton = document.getElementById('spotlight-toggle');
+        let isSpotlightMode = false;
+
+        function updateSpotlight(e) {
+            if (!isSpotlightMode) return;
+            const rect = mainContentArea.getBoundingClientRect();
+            const x = e.clientX - rect.left; // 鼠标相对于main元素的X坐标
+            const y = e.clientY - rect.top;  // 鼠标相对于main元素的Y坐标
+            spotlightOverlay.style.clipPath = `circle(80px at ${x}px ${y}px)`;
+        }
+
+        spotlightToggleButton.addEventListener('click', () => {
+            isSpotlightMode = !isSpotlightMode;
+            if (isSpotlightMode) {
+                spotlightOverlay.classList.add('active');
+                spotlightToggleButton.classList.add('bg-blue-600');
+                spotlightToggleButton.classList.remove('bg-gray-700');
+                console.log('聚光灯模式已开启');
+                // 确保板书关闭
+                if (isDrawingMode) {
+                    toggleChalkboardMode();
+                }
+            } else {
+                spotlightOverlay.classList.remove('active');
+                spotlightToggleButton.classList.remove('bg-blue-600');
+                spotlightToggleButton.classList.add('bg-gray-700');
+                console.log('聚光灯模式已关闭');
+                spotlightOverlay.style.clipPath = 'circle(0px at center)'; // 隐藏聚光灯效果
+            }
+            hideInteractionModal();
+        });
+
+        mainContentArea.addEventListener('mousemove', updateSpotlight);
+
+        // 鼠标右键关闭聚光灯模式
+        mainContentArea.addEventListener('contextmenu', (e) => {
+            if (isSpotlightMode) {
+                e.preventDefault(); // 阻止默认右键菜单
+                toggleSpotlightMode();
+            }
+        });
+
+        // 辅助函数：切换板书模式，以确保与聚光灯模式互斥
+        function toggleChalkboardMode() {
+            isDrawingMode = false;
+            drawingCanvas.classList.add('hidden');
+            drawingCanvas.style.pointerEvents = 'none';
+            chalkboardToggleButton.classList.remove('bg-blue-600');
+            chalkboardToggleButton.classList.add('bg-gray-700');
+            ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height); // 清除所有绘图
+        }
+
+        // 辅助函数：切换聚光灯模式，确保与板书模式互斥
+        function toggleSpotlightMode() {
+            isSpotlightMode = false;
+            spotlightOverlay.classList.remove('active');
+            spotlightToggleButton.classList.remove('bg-blue-600');
+            spotlightToggleButton.classList.add('bg-gray-700');
+            spotlightOverlay.style.clipPath = 'circle(0px at center)';
+        }
+
+        // AI 课堂纪要模态框功能
+        const aiSummaryButton = document.getElementById('ai-summary-button');
+        const aiSummaryModal = document.getElementById('ai-summary-modal');
+        const aiSummaryStatusText = document.getElementById('ai-summary-status-text');
+        const aiSummaryProgressText = document.getElementById('ai-summary-progress-text');
+        const aiSummaryInfoText = document.getElementById('ai-summary-info-text');
+        const stopAiSummaryButton = document.getElementById('stop-ai-summary-button');
+        
+        const aiSummaryLoadingContent = document.getElementById('ai-summary-loading-content');
+        const aiSummaryDisplayContent = document.getElementById('ai-summary-display-content');
+        const copySummaryButton = document.getElementById('copy-summary-button');
+
+        // 新增：模态框内部的状态切换按钮
+        const setGeneratingButton = document.getElementById('set-generating');
+        const setCompletedButton = document.getElementById('set-completed');
+        const setPausedButton = document.getElementById('set-paused');
+
+        let isAiSummaryGenerating = true; // 模拟生成状态
+
+        function showAiSummaryModal() {
+            aiSummaryModal.classList.remove('hidden');
+            aiSummaryModal.classList.remove('-translate-x-full');
+            aiSummaryModal.classList.add('translate-x-0');
+            // Ensure initial state is loading
+            aiSummaryLoadingContent.classList.remove('hidden');
+            aiSummaryDisplayContent.classList.add('hidden');
+            aiSummaryStatusText.textContent = '为您生成会议纪要...';
+            aiSummaryProgressText.textContent = '生成中';
+            aiSummaryInfoText.textContent = '会议纪要生成中，请稍等片刻';
+            stopAiSummaryButton.disabled = false;
+            stopAiSummaryButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            isAiSummaryGenerating = true;
+        }
+
+        function hideAiSummaryModal() {
+            aiSummaryModal.classList.remove('translate-x-0');
+            aiSummaryModal.classList.add('-translate-x-full');
+            aiSummaryModal.addEventListener('transitionend', function handler() {
+                aiSummaryModal.classList.add('hidden');
+                aiSummaryModal.removeEventListener('transitionend', handler);
+            }, { once: true });
+            // Reset button text to generating when modal is hidden
+            aiSummaryButton.querySelector('span:nth-child(2)').textContent = '纪要生成中';
+        }
+
+        // 点击按钮显示模态框
+        aiSummaryButton.addEventListener('click', (e) => {
+            if (aiSummaryModal.classList.contains('hidden')) {
+                showAiSummaryModal();
+            } else {
+                hideAiSummaryModal();
+            }
+        });
+
+        // 点击停止按钮
+        stopAiSummaryButton.addEventListener('click', () => {
+            alert('AI 纪要生成已停止！');
+            aiSummaryStatusText.textContent = '会议纪要生成已停止。';
+            aiSummaryProgressText.textContent = '已停止';
+            aiSummaryInfoText.textContent = '纪要生成已停止，请手动查看或重新开始。'; // More specific info text
+            isAiSummaryGenerating = false;
+            stopAiSummaryButton.disabled = true;
+            stopAiSummaryButton.classList.add('opacity-50', 'cursor-not-allowed');
+            aiSummaryLoadingContent.classList.remove('hidden'); // Keep skeletons or show specific 'stopped' placeholder
+            aiSummaryDisplayContent.classList.add('hidden');
+        });
+
+        // 模拟纪要状态切换逻辑 (整合到模态框内部)
+        function setAiSummaryStatus(status) {
+            const buttonTextSpan = aiSummaryButton.querySelector('span:nth-child(2)');
+
+            if (status === 'generating') {
+                buttonTextSpan.textContent = '纪要生成中';
+                aiSummaryStatusText.textContent = '为您生成会议纪要...';
+                aiSummaryProgressText.textContent = '生成中';
+                aiSummaryInfoText.textContent = '会议纪要生成中，请稍等片刻';
+                aiSummaryLoadingContent.classList.remove('hidden');
+                aiSummaryDisplayContent.classList.add('hidden');
+                isAiSummaryGenerating = true;
+                stopAiSummaryButton.disabled = false;
+                stopAiSummaryButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else if (status === 'completed') {
+                buttonTextSpan.textContent = '纪要已完成';
+                aiSummaryStatusText.textContent = '会议纪要已生成。';
+                aiSummaryProgressText.textContent = '已完成';
+                aiSummaryInfoText.textContent = '以下是本次课程的AI会议纪要：'; // Info text for completed
+                aiSummaryLoadingContent.classList.add('hidden');
+                aiSummaryDisplayContent.classList.remove('hidden');
+                isAiSummaryGenerating = false;
+                stopAiSummaryButton.disabled = true;
+                stopAiSummaryButton.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (status === 'paused') {
+                buttonTextSpan.textContent = '纪要已暂停';
+                aiSummaryStatusText.textContent = '会议纪要生成已暂停。';
+                aiSummaryProgressText.textContent = '已暂停';
+                aiSummaryInfoText.textContent = '会议纪要生成已暂停，可恢复或停止。'; // Info text for paused
+                aiSummaryLoadingContent.classList.remove('hidden'); // Show skeletons for paused too
+                aiSummaryDisplayContent.classList.add('hidden');
+                isAiSummaryGenerating = false;
+                stopAiSummaryButton.disabled = false;
+                stopAiSummaryButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // 绑定模态框内部的状态切换按钮事件
+        setGeneratingButton.addEventListener('click', () => setAiSummaryStatus('generating'));
+        setCompletedButton.addEventListener('click', () => setAiSummaryStatus('completed'));
+        setPausedButton.addEventListener('click', () => setAiSummaryStatus('paused'));
+
+        // 点击复制纪要按钮
+        if (copySummaryButton) {
+            copySummaryButton.addEventListener('click', () => {
+                const summaryText = aiSummaryDisplayContent.querySelector('p').textContent; // Get content of the first paragraph
+                navigator.clipboard.writeText(summaryText).then(() => {
+                    alert('会议纪要已复制到剪贴板！');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    alert('复制失败，请手动复制。');
+                });
+            });
+        }
+
+        // 点击模态框外部或文档其他地方关闭模态框和下拉菜单
+        document.addEventListener('click', (e) => {
+            if (!aiSummaryModal.contains(e.target) && !aiSummaryButton.contains(e.target)) {
+                hideAiSummaryModal();
+            }
+        });
+
+    </script>
+</body>
+</html> 

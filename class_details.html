@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课堂详情 - FineClass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .mindmap-node {
+                @apply bg-white border border-gray-200 rounded-md p-2 shadow-sm hover:shadow-md transition-shadow cursor-pointer;
+            }
+            .mindmap-connector {
+                @apply absolute border-t-2 border-blue-400 transform -translate-y-1/2;
+            }
+        }
+    </style>
+    <style>
+        /* 思维导图样式 */
+        .mindmap-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: auto;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+        }
+        
+        /* 饼图样式 */
+        .custom-pie-chart {
+            position: relative;
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            background-image: conic-gradient(
+                #3B82F6 0deg 162deg,    /* 45% */
+                #10B981 162deg 306deg,  /* 40% */
+                #F59E0B 306deg 342deg,  /* 10% */
+                #EF4444 342deg 360deg   /* 5% */
+            );
+        }
+        
+        .custom-pie-chart-2 {
+            position: relative;
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            background-image: conic-gradient(
+                #3B82F6 0deg 126deg,    /* 35% */
+                #10B981 126deg 234deg,  /* 30% */
+                #F59E0B 234deg 324deg,  /* 25% */
+                #EF4444 324deg 360deg   /* 10% */
+            );
+        }
+    </style>
+</head>
+<body class="flex h-screen bg-gray-100">
+
+    <!-- 左侧导航栏 -->
+    <div class="w-64 bg-white shadow-md">
+        <div class="p-4 border-b">
+            <div class="flex items-center space-x-2">
+                <div class="bg-[#165DFF] text-white h-10 w-10 rounded-lg flex items-center justify-center">
+                    <i class="fa fa-book text-xl"></i>
+                </div>
+                <div class="flex items-end justify-between w-full">
+                    <h1 class="text-xl font-bold text-[#165DFF]">FineClass帆课</h1>
+                    <p class="text-xs text-gray-500">教师端</p>
+                </div>
+            </div>
+        </div>
+        <nav class="mt-4">
+            <a href="homepage.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-graduation-cap mr-3"></i>我的课程
+            </a>
+            <a href="#" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-chalkboard-teacher mr-3"></i>开始上课
+            </a>
+            <a href="#" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-bell mr-3"></i>通知
+            </a>
+        </nav>
+    </div>
+
+    <!-- 右侧主面板 -->
+    <div class="flex-1 flex flex-col">
+        <!-- 面包屑导航 -->
+        <header class="bg-white shadow-sm p-4">
+            <nav class="text-sm text-gray-500">
+                <a href="homepage.html" class="hover:underline">我的课程</a> &gt;
+                <a href="course_details.html?tab=outline" class="hover:underline">[课程名称 (班级班号)]</a> &gt;
+                <span class="font-semibold text-gray-700">[课堂名称]</span>
+            </nav>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            <!-- 课堂基本信息 -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">第一讲：课程介绍</h1>
+                        <p class="text-gray-600 mt-1">2024-02-20 14:00-15:40</p>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
+                            <i class="fas fa-download mr-2"></i>下载课件
+                        </button>
+                        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md flex items-center">
+                            <i class="fas fa-edit mr-2"></i>编辑课堂
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 三栏布局 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- AI 分析部分 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-lg font-semibold mb-4">AI 分析</h2>
+                        <div class="space-y-4">
+                            <!-- 高频知识点 -->
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-700 mb-2">高频知识点</h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between bg-blue-50 p-2 rounded">
+                                        <span class="text-sm">线性方程组求解</span>
+                                        <span class="text-xs text-blue-600">23次提问</span>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-blue-50 p-2 rounded">
+                                        <span class="text-sm">矩阵运算</span>
+                                        <span class="text-xs text-blue-600">18次提问</span>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-blue-50 p-2 rounded">
+                                        <span class="text-sm">行列式性质</span>
+                                        <span class="text-xs text-blue-600">15次提问</span>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-blue-50 p-2 rounded">
+                                        <span class="text-sm">向量空间</span>
+                                        <span class="text-xs text-blue-600">12次提问</span>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-blue-50 p-2 rounded">
+                                        <span class="text-sm">特征值与特征向量</span>
+                                        <span class="text-xs text-blue-600">10次提问</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 常见问题 -->
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-700 mb-2">常见问题</h3>
+                                <div class="space-y-2">
+                                    <div class="bg-gray-50 p-3 rounded">
+                                        <p class="text-sm text-gray-800 mb-1">如何判断线性方程组是否有解？</p>
+                                        <p class="text-xs text-gray-500">12名学生提问</p>
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded">
+                                        <p class="text-sm text-gray-800 mb-1">矩阵的秩与方程组解的关系？</p>
+                                        <p class="text-xs text-gray-500">8名学生提问</p>
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded">
+                                        <p class="text-sm text-gray-800 mb-1">行列式的几何意义是什么？</p>
+                                        <p class="text-xs text-gray-500">7名学生提问</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 学习难点 -->
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-700 mb-2">学习难点</h3>
+                                <div class="space-y-2">
+                                    <div class="bg-yellow-50 p-3 rounded">
+                                        <p class="text-sm text-gray-800 mb-1">矩阵的秩与线性方程组解的关系</p>
+                                        <p class="text-xs text-yellow-600">理解难度：高</p>
+                                    </div>
+                                    <div class="bg-yellow-50 p-3 rounded">
+                                        <p class="text-sm text-gray-800 mb-1">行列式的计算技巧</p>
+                                        <p class="text-xs text-yellow-600">理解难度：中</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 建议复习 -->
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-700 mb-2">建议复习</h3>
+                                <div class="space-y-2">
+                                    <div class="bg-green-50 p-3 rounded">
+                                        <p class="text-sm text-gray-800 mb-1">矩阵的基本运算</p>
+                                        <p class="text-xs text-green-600">掌握度：75%</p>
+                                    </div>
+                                    <div class="bg-green-50 p-3 rounded">
+                                        <p class="text-sm text-gray-800 mb-1">线性方程组的解法</p>
+                                        <p class="text-xs text-green-600">掌握度：82%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 思维导图部分 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">课程大纲</h3>
+                        <div class="mindmap-container">
+                            <div class="flex justify-center items-center h-full">
+                                <div class="relative w-full">
+                                    <!-- 中心节点 -->
+                                    <div class="mindmap-node absolute left-1/2 top-0 transform -translate-x-1/2 z-10">
+                                        线性代数
+                                    </div>
+                                    
+                                    <!-- 连接线 - 矩阵 -->
+                                    <div class="mindmap-connector" style="width: 120px; left: calc(25% - 60px); top: 60px;"></div>
+                                    
+                                    <!-- 连接线 - 行列式 -->
+                                    <div class="mindmap-connector" style="width: 80px; left: calc(50% - 40px); top: 60px;"></div>
+                                    
+                                    <!-- 连接线 - 线性方程组 -->
+                                    <div class="mindmap-connector" style="width: 80px; left: calc(50% - 40px); top: 60px;"></div>
+                                    
+                                    <!-- 连接线 - 特征值与特征向量 -->
+                                    <div class="mindmap-connector" style="width: 120px; right: calc(25% - 60px); top: 60px;"></div>
+                                    
+                                    <!-- 一级节点 -->
+                                    <div class="mindmap-node absolute left-[25%] top-[80px] z-10">
+                                        矩阵
+                                    </div>
+                                    
+                                    <div class="mindmap-node absolute left-[50%] top-[80px] transform -translate-x-1/2 z-10">
+                                        行列式
+                                    </div>
+                                    
+                                    <div class="mindmap-node absolute left-[50%] top-[150px] transform -translate-x-1/2 z-10">
+                                        线性方程组
+                                    </div>
+                                    
+                                    <div class="mindmap-node absolute right-[25%] top-[80px] z-10">
+                                        特征值与特征向量
+                                    </div>
+                                    
+                                    <!-- 矩阵的子节点连接线 -->
+                                    <div class="mindmap-connector" style="width: 20px; left: calc(12.5% - 10px); top: 140px; transform: rotate(90deg);"></div>
+                                    <div class="mindmap-connector" style="width: 20px; left: calc(12.5% - 10px); top: 180px; transform: rotate(90deg);"></div>
+                                    <div class="mindmap-connector" style="width: 20px; left: calc(12.5% - 10px); top: 220px; transform: rotate(90deg);"></div>
+                                    
+                                    <!-- 行列式的子节点连接线 -->
+                                    <div class="mindmap-connector" style="width: 20px; left: calc(50% - 10px); top: 110px; transform: rotate(90deg);"></div>
+                                    <div class="mindmap-connector" style="width: 20px; left: calc(50% - 10px); top: 150px; transform: rotate(90deg);"></div>
+                                    
+                                    <!-- 线性方程组的子节点连接线 -->
+                                    <div class="mindmap-connector" style="width: 20px; left: calc(50% - 10px); top: 210px; transform: rotate(90deg);"></div>
+                                    <div class="mindmap-connector" style="width: 20px; left: calc(50% - 10px); top: 250px; transform: rotate(90deg);"></div>
+                                    
+                                    <!-- 特征值与特征向量的子节点连接线 -->
+                                    <div class="mindmap-connector" style="width: 20px; right: calc(12.5% - 10px); top: 140px; transform: rotate(90deg);"></div>
+                                    <div class="mindmap-connector" style="width: 20px; right: calc(12.5% - 10px); top: 180px; transform: rotate(90deg);"></div>
+                                    
+                                    <!-- 矩阵的子节点 -->
+                                    <div class="mindmap-node absolute left-[12.5%] top-[160px] z-10 text-xs">
+                                        矩阵运算
+                                    </div>
+                                    
+                                    <div class="mindmap-node absolute left-[12.5%] top-[200px] z-10 text-xs">
+                                        矩阵的秩
+                                    </div>
+                                    
+                                    <div class="mindmap-node absolute left-[12.5%] top-[240px] z-10 text-xs">
+                                        逆矩阵
+                                    </div>
+                                    
+                                    <!-- 行列式的子节点 -->
+                                    <div class="mindmap-node absolute left-[50%] top-[130px] transform -translate-x-1/2 z-10 text-xs">
+                                        行列式的性质
+                                    </div>
+                                    
+                                    <div class="mindmap-node absolute left-[50%] top-[170px] transform -translate-x-1/2 z-10 text-xs">
+                                        行列式的计算
+                                    </div>
+                                    
+                                    <!-- 线性方程组的子节点 -->
+                                    <div class="mindmap-node absolute left-[50%] top-[230px] transform -translate-x-1/2 z-10 text-xs">
+                                        高斯消元法
+                                    </div>
+                                    
+                                    <div class="mindmap-node absolute left-[50%] top-[270px] transform -translate-x-1/2 z-10 text-xs">
+                                        克拉默法则
+                                    </div>
+                                    
+                                    <!-- 特征值与特征向量的子节点 -->
+                                    <div class="mindmap-node absolute right-[12.5%] top-[160px] z-10 text-xs">
+                                        特征多项式
+                                    </div>
+                                    
+                                    <div class="mindmap-node absolute right-[12.5%] top-[200px] z-10 text-xs">
+                                        对角化
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 课堂问题数据看板 -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">课堂问题数据</h3>
+                        <div class="space-y-6">
+                            <!-- 问题1 -->
+                            <div class="border rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">问题1：矩阵的秩与线性方程组解的关系</h4>
+                                        <p class="text-sm text-gray-500">正确率：85%</p>
+                                    </div>
+                                    <div class="w-32 h-32">
+                                        <div class="custom-pie-chart"></div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-blue-50 p-3 rounded">
+                                        <p class="text-sm text-blue-700">选项A：45%</p>
+                                    </div>
+                                    <div class="bg-green-50 p-3 rounded">
+                                        <p class="text-sm text-green-700">选项B：40%</p>
+                                    </div>
+                                    <div class="bg-yellow-50 p-3 rounded">
+                                        <p class="text-sm text-yellow-700">选项C：10%</p>
+                                    </div>
+                                    <div class="bg-red-50 p-3 rounded">
+                                        <p class="text-sm text-red-700">选项D：5%</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 问题2 -->
+                            <div class="border rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">问题2：特征值与特征向量的几何意义</h4>
+                                        <p class="text-sm text-gray-500">正确率：65%</p>
+                                    </div>
+                                    <div class="w-32 h-32">
+                                        <div class="custom-pie-chart-2"></div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-blue-50 p-3 rounded">
+                                        <p class="text-sm text-blue-700">选项A：35%</p>
+                                    </div>
+                                    <div class="bg-green-50 p-3 rounded">
+                                        <p class="text-sm text-green-700">选项B：30%</p>
+                                    </div>
+                                    <div class="bg-yellow-50 p-3 rounded">
+                                        <p class="text-sm text-yellow-700">选项C：25%</p>
+                                    </div>
+                                    <div class="bg-red-50 p-3 rounded">
+                                        <p class="text-sm text-red-700">选项D：10%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 更新页面信息
+        function updatePageInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const classId = urlParams.get('id');
+            const classTitle = document.querySelector(`[data-class-id="${classId}"]`)?.textContent || '课堂详情';
+            document.title = `${classTitle} - FineClass`;
+            // 确保元素存在再更新
+            if (document.getElementById('classTitle')) {
+                document.getElementById('classTitle').textContent = classTitle;
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePageInfo();
+        });
+    </script>
+</body>
+</html>    

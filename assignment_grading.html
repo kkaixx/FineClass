@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI作业批改原型 - 作业批改</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        accent: '#3B82F6',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                        neutral: {
+                            100: '#F3F4F6',
+                            200: '#E5E7EB',
+                            300: '#D1D5DB',
+                            400: '#9CA3AF',
+                            500: '#6B7280',
+                            600: '#4B5563',
+                            700: '#374151',
+                            800: '#1F2937',
+                            900: '#111827',
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            }
+        }
+    </script>
+    <style>
+        /* 自定义滚动条样式，让其更细致 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+         /* Style for the range input (slider) */
+         input[type="range"] {
+            -webkit-appearance: none; /* Override default appearance */
+            appearance: none;
+            height: 8px; /* Specify a height */
+            background: #d1d5db; /* Grey background */
+            outline: none; /* Remove outline */
+            opacity: 0.7; /* Add transparency */
+            transition: opacity .15s ease-in-out; /* Smooth transition for hover */
+            border-radius: 4px;
+         }
+
+         input[type="range"]:hover {
+            opacity: 1;
+         }
+
+         /* Style for the slider handle (Chrome, Edge, Safari) */
+         input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; /* Override default appearance */
+            appearance: none;
+            width: 18px; /* Set a specific slider handle width */
+            height: 18px; /* Slider handle height */
+            background: #165DFF; /* Blue color */
+            cursor: pointer; /* Cursor on hover */
+            border-radius: 50%; /* Make it round */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+         }
+
+         /* Style for the slider handle (Firefox) */
+         input[type="range"]::-moz-range-thumb {
+            width: 18px; /* Set a specific slider handle width */
+            height: 18px; /* Slider handle height */
+            background: #165DFF; /* Blue color */
+            cursor: pointer; /* Cursor on hover */
+            border-radius: 50%; /* Make it round */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+         }
+    </style>
+</head>
+<body class="flex flex-col h-screen bg-gray-100 font-inter text-neutral-800 overflow-hidden">
+
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm px-4 sm:px-6 py-4 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center">
+            <button id="back-to-assignment-details" class="flex items-center text-neutral-600 hover:text-primary transition-colors duration-200 mr-4" type="button">
+                <i class="fas fa-arrow-left mr-2"></i>
+                <span class="hidden sm:inline">返回</span> <!-- 返回按钮 -->
+            </button>
+             <!-- 学生和作业标题 -->
+            <h1 class="text-lg sm:text-xl font-semibold text-neutral-800">[学生姓名 Placeholder] 的作业</h1>
+        </div>
+
+        <div class="flex items-center space-x-4 sm:space-x-6">
+            <!-- Removed AI辅助批改标记 -->
+
+            <!-- 总分 -->
+            <div class="text-neutral-700 flex items-center">
+                <span class="mr-1 hidden sm:inline">总分:</span>
+                <!-- Placeholder for current total score -->
+                <span id="total-score" class="font-bold text-lg sm:text-xl text-primary">0</span>
+                 <!-- Placeholder for total possible score -->
+                <span class="font-bold text-lg sm:text-xl text-neutral-700">/ <span id="total-max-score">0</span></span>
+            </div>
+
+            <!-- 分页导航 -->
+            <div class="flex items-center space-x-2 text-neutral-600">
+                <button class="hover:text-primary transition-colors duration-200" title="上一位学生" type="button">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="ml-1 hidden sm:inline">上一位</span>
+                </button>
+                <span class="text-neutral-700 text-sm">[当前学生序号]/[总学生数]</span>
+                <button class="hover:text-primary transition-colors duration-200" title="下一位学生" type="button">
+                    <span class="mr-1 hidden sm:inline">下一位</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+             <!-- Finalize Assignment Button - Placeholder, can be added later -->
+             <!-- <button class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 sm:px-6 rounded-lg shadow transition-all duration-200 flex items-center" type="button">
+                 <i class="fas fa-check-circle mr-2"></i>
+                 <span>完成批改</span>
+             </button> -->
+        </div>
+    </header>
+
+    <!-- 主内容区域 -->
+    <main class="flex-1 flex overflow-hidden relative">
+        <!-- 左侧：作业内容展示区 -->
+        <div class="flex-1 p-6 overflow-y-auto bg-white border-r border-gray-200">
+            <!-- 作业内容占位符 -->
+            <div class="border border-dashed border-gray-400 rounded-lg h-full flex items-center justify-center text-gray-500 text-lg">
+                [学生提交的作业内容 Placeholder: 文档, 代码等]
+            </div>
+             <!-- 缩放控件 (可选) -->
+             <div class="flex items-center justify-center mt-4 space-x-2 text-neutral-600">
+                 <button class="hover:text-primary text-sm transition-colors duration-200" type="button"><i class="fas fa-search-minus mr-1"></i>缩小</button>
+                 <span class="text-neutral-700 text-sm">100%</span>
+                 <button class="hover:text-primary text-sm transition-colors duration-200" type="button"><i class="fas fa-search-plus mr-1"></i>放大</button>
+             </div>
+        </div>
+
+        <!-- 浮动学生列表按钮 -->
+        <button id="student-list-button" class="fixed left-4 bottom-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-white p-3 rounded-full shadow-lg transition-all duration-200 z-50" type="button">
+            <i class="fas fa-users text-xl"></i>
+        </button>
+
+        <!-- 右侧：批改操作区 -->
+        <div class="flex-1 p-6 overflow-y-auto bg-gray-50">
+            <!-- Removed 批改头部：AI General Instructions -->
+
+
+            <!-- 题目批改列表 -->
+            <div id="grading-items-list" class="space-y-6">
+                <!-- 单个题目批改项 (示例) -->
+                <div class="question-card bg-white rounded-xl shadow-card p-4 sm:p-6 border border-neutral-200 hover:shadow-card-hover transition-all duration-300 relative">
+                    <div class="flex flex-col space-y-4">
+                        <!-- 题目内容简述 (Placeholder) -->
+                         <div class="text-neutral-700 text-sm">
+                             <p>按下 LCD 防护罩上的 UP 按钮，并描述您在 LCD 显示屏中看到的内容。</p>
+                         </div>
+
+                        <!-- 得分情况 -->
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-neutral-700">得分:</label>
+                            <div class="flex items-center space-x-4">
+                                 <!-- 得分滑动条 -->
+                                 <input type="range" min="0.0" max="4.0" value="0.0" step="0.5" class="score-slider w-32">
+                                 <!-- 当前得分显示 -->
+                                 <span class="score-display text-lg font-bold text-primary min-w-[3rem] text-right">0.0</span>
+                                 <span class="text-neutral-700 text-sm mr-4">/ 4</span> <!-- 每题总分设为4 -->
+                                 <!-- AI 微调按钮 -->
+                                 <button class="text-primary hover:text-primary/90 text-sm flex items-center transition-colors duration-200 view-rubric-btn" type="button">
+                                     <i class="fas fa-cogs mr-1"></i>调整评分细则
+                                 </button>
+                            </div>
+                        </div>
+                        <!-- 反馈区域 -->
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 mb-1"><i class="far fa-star mr-1 text-warning"></i>反馈:</label>
+                             <div class="relative">
+                                <textarea class="feedback-textarea w-full border border-neutral-300 rounded-md p-2 pr-12 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" rows="3" placeholder="输入反馈意见..."></textarea>
+                                 <div class="feedback-quick-buttons absolute top-2 right-2 flex space-x-1">
+                                     <button class="quick-insert-btn text-success hover:text-success/80 focus:outline-none w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200" data-value="✓" type="button">
+                                         <i class="fas fa-check"></i>
+                                     </button>
+                                     <button class="quick-insert-btn text-danger hover:text-danger/80 focus:outline-none w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200" data-value="✗" type="button">
+                                         <i class="fas fa-times"></i>
+                                     </button>
+                                 </div>
+                             </div>
+                             <!-- 取消和保存按钮 -->
+                             <div class="feedback-action-buttons flex justify-end mt-2 space-x-4 hidden">
+                                <button class="cancel-feedback-btn bg-white hover:bg-gray-100 text-neutral-700 font-medium py-2 px-4 rounded-lg text-sm transition-colors duration-200 border border-neutral-300" type="button">
+                                     取消
+                                 </button>
+                                <button class="save-feedback-btn bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors duration-200" type="button">
+                                     保存
+                                 </button>
+                             </div>
+                        </div>
+                    </div>
+                    <!-- 评分细则模块 -->
+                    <div class="rubric-module hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-xl z-10">
+                        <div class="bg-white h-full rounded-xl shadow-card border border-neutral-200 flex flex-col p-4 sm:p-6">
+                            
+                            <div class="flex items-center justify-center mb-1">
+                                <button class="max-score-btn text-neutral-600 hover:text-primary mr-2 text-xl bg-neutral-100 rounded-md p-1" data-action="decrement" type="button">-</button>
+                                <span class="text-neutral-700 font-medium">题目分数：<span class="max-score-display text-primary">4.0</span></span>
+                                <button class="max-score-btn text-neutral-600 hover:text-primary ml-2 text-xl bg-neutral-100 rounded-md p-1" data-action="increment" type="button">+</button>
+                            </div>
+                            <textarea class="flex-1 w-full border border-neutral-300 rounded-md p-2 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" placeholder="评分细则内容..." readonly>
+(0.33 pts total):
+- 0.17 pts: Student successfully built and downloaded the project to the board
+- 0.16 pts: Student correctly reports what appears on LCD display
+- 0.33 pts: Student wrote the code in the appropriate file
+                            </textarea>
+                            <div class="flex justify-end space-x-4 mt-1">
+                                <button class="cancel-rubric-btn bg-white hover:bg-gray-100 text-neutral-700 font-medium py-0.5 px-1.5 rounded-lg text-sm transition-colors duration-200 border border-neutral-300" type="button">取消</button>
+                                <button class="regrade-all-btn bg-primary hover:bg-primary/90 text-white font-medium py-0.5 px-1.5 rounded-lg text-sm transition-colors duration-200" type="button">重新评分全部</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- 可以添加更多题目批改项 -->
+                 <!-- Another sample item -->
+                 <div class="question-card bg-white rounded-xl shadow-card p-4 sm:p-6 border border-neutral-200 hover:shadow-card-hover transition-all duration-300 relative">
+                    <div class="flex flex-col space-y-4">
+                         <div class="text-neutral-700 text-sm">
+                             <p>您从函数 adc_read（） 中获得的最大值是多少？对这个最大值进行编码需要多少位？</p>
+                         </div>
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-neutral-700">得分:</label>
+                            <div class="flex items-center space-x-4">
+                                 <!-- 得分滑动条 -->
+                                 <input type="range" min="0.0" max="4.0" value="0.0" step="0.5" class="score-slider w-32">
+                                 <!-- 当前得分显示 -->
+                                 <span class="score-display text-lg font-bold text-primary min-w-[3rem] text-right">0.0</span>
+                                 <span class="text-neutral-700 text-sm mr-4">/ 4</span> <!-- 每题总分设为4 -->
+                                 <!-- AI 微调按钮 -->
+                                 <button class="text-primary hover:text-primary/90 text-sm flex items-center transition-colors duration-200 view-rubric-btn" type="button">
+                                     <i class="fas fa-cogs mr-1"></i>调整评分细则
+                                 </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-neutral-700 mb-1"><i class="far fa-star mr-1 text-warning"></i>反馈:</label>
+                             <div class="relative">
+                                <textarea class="feedback-textarea w-full border border-neutral-300 rounded-md p-2 pr-12 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" rows="3" placeholder="输入反馈意见..."></textarea>
+                                 <div class="feedback-quick-buttons absolute top-2 right-2 flex space-x-1">
+                                     <button class="quick-insert-btn text-success hover:text-success/80 focus:outline-none w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200" data-value="✓" type="button">
+                                         <i class="fas fa-check"></i>
+                                     </button>
+                                     <button class="quick-insert-btn text-danger hover:text-danger/80 focus:outline-none w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200" data-value="✗" type="button">
+                                         <i class="fas fa-times"></i>
+                                     </button>
+                                 </div>
+                             </div>
+                              <!-- 取消和保存按钮 -->
+                             <div class="feedback-action-buttons flex justify-end mt-2 space-x-4 hidden">
+                                <button class="cancel-feedback-btn bg-white hover:bg-gray-100 text-neutral-700 font-medium py-2 px-4 rounded-lg text-sm transition-colors duration-200 border border-neutral-300" type="button">
+                                     取消
+                                 </button>
+                                <button class="save-feedback-btn bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors duration-200" type="button">
+                                     保存
+                                 </button>
+                             </div>
+                        </div>
+                    </div>
+                    <!-- 评分细则模块 -->
+                    <div class="rubric-module hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-xl z-10">
+                        <div class="bg-white h-full rounded-xl shadow-card border border-neutral-200 flex flex-col p-4 sm:p-6">
+                            
+                            <div class="flex items-center justify-center mb-1">
+                                <button class="max-score-btn text-neutral-600 hover:text-primary mr-2 text-xl bg-neutral-100 rounded-md p-1" data-action="decrement" type="button">-</button>
+                                <span class="text-neutral-700 font-medium">题目分数：<span class="max-score-display text-primary">4.0</span></span>
+                                <button class="max-score-btn text-neutral-600 hover:text-primary ml-2 text-xl bg-neutral-100 rounded-md p-1" data-action="increment" type="button">+</button>
+                            </div>
+                            <textarea class="flex-1 w-full border border-neutral-300 rounded-md p-2 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" placeholder="评分细则内容..." readonly>
+(0.33 pts total):
+- 0.17 pts: Student successfully built and downloaded the project to the board
+- 0.16 pts: Student correctly reports what appears on LCD display
+- 0.33 pts: Student wrote the code in the appropriate file
+                            </textarea>
+                            <div class="flex justify-end space-x-4 mt-1">
+                                <button class="cancel-rubric-btn bg-white hover:bg-gray-100 text-neutral-700 font-medium py-0.5 px-1.5 rounded-lg text-sm transition-colors duration-200 border border-neutral-300" type="button">取消</button>
+                                <button class="regrade-all-btn bg-primary hover:bg-primary/90 text-white font-medium py-0.5 px-1.5 rounded-lg text-sm transition-colors duration-200" type="button">重新评分全部</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <!-- 总体反馈/评语 -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mt-6 border border-gray-200">
+                 <h4 class="text-sm font-semibold text-neutral-800 mb-3">总体反馈/评语</h4>
+                 <textarea class="w-full border border-neutral-300 rounded-md p-2 text-sm text-neutral-800 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition-all duration-200" rows="4" placeholder="输入总体反馈或评语..."></textarea>
+            </div>
+
+            <!-- 保存/提交按钮 -->
+            <div class="flex justify-end mt-6">
+                 <button id="save-grading-button" class="bg-success hover:bg-success/90 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors duration-200" type="button">
+                     复核无误
+                 </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 学生名单模态框 -->
+    <div id="student-list-modal" class="fixed top-0 bottom-0 left-0 w-80 bg-black/50 z-50 transform -translate-x-full transition-transform duration-300 ease-out">
+        <div class="bg-white h-full p-6 sm:p-8 relative shadow-xl">
+            <h3 class="text-xl font-semibold text-neutral-800 mb-4">学生名单</h3>
+            <button class="absolute top-4 right-4 text-neutral-600 hover:text-neutral-800" onclick="hideStudentListModal()" type="button">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="space-y-3 max-h-[calc(100vh-120px)] overflow-y-auto pr-2">
+                <!-- 学生列表项 (示例) -->
+                <div class="flex items-center justify-between p-3 bg-neutral-100 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm font-semibold text-neutral-600">1.</span>
+                        <span class="text-neutral-800 font-medium">张三</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm text-green-600">正常提交</span>
+                        <span class="block text-neutral-700 text-sm">3.5 / 4</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-neutral-100 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm font-semibold text-neutral-600">2.</span>
+                        <span class="text-neutral-800 font-medium">李四</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm text-red-600">逾期 2 小时</span>
+                        <span class="block text-neutral-700 text-sm">2.0 / 4</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-neutral-100 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm font-semibold text-neutral-600">3.</span>
+                        <span class="text-neutral-800 font-medium">王五</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm text-green-600">正常提交</span>
+                        <span class="block text-neutral-700 text-sm">4.0 / 4</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-neutral-100 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm font-semibold text-neutral-600">4.</span>
+                        <span class="text-neutral-800 font-medium">赵六</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm text-yellow-600">未提交</span>
+                        <span class="block text-neutral-700 text-sm">0.0 / 4</span>
+                    </div>
+                </div>
+                <!-- 更多学生项... -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 返回按钮功能
+        document.getElementById('back-to-assignment-details').addEventListener('click', () => {
+            // TODO: Replace with actual navigation logic to the student assignment list tab on the assignment details page
+            window.history.back(); // Fallback: go back to the previous page
+        });
+
+        // TODO: 这里可以添加获取当前学生和作业信息的逻辑，以及分页导航的逻辑
+        // 根据URL参数获取学生ID和作业ID，然后加载对应数据
+        // 更新页面标题，总分，分页信息
+
+        // AI微调按钮点击事件 (占位符) - Using event delegation
+        const gradingItemsList = document.getElementById('grading-items-list');
+        if (gradingItemsList) {
+             gradingItemsList.addEventListener('click', (event) => {
+                 // Check if the clicked element or its ancestor is the AI Fine Tune button area
+                 const target = event.target.closest('.text-primary.flex.items-center');
+
+                 if (target) {
+                     // 移除模拟提示
+                     console.log('AI Fine Tune button clicked for item:', target.closest('.question-card').querySelector('p').textContent);
+                 }
+             });
+        }
+
+        let hasGradingChanges = false; // 标记是否进行了评分修改
+        const saveGradingButton = document.getElementById('save-grading-button');
+
+        function updateSaveButtonTextAndColor() {
+            if (hasGradingChanges) {
+                saveGradingButton.textContent = '保存修改';
+                saveGradingButton.classList.remove('bg-success', 'hover:bg-success/90');
+                saveGradingButton.classList.add('bg-primary', 'hover:bg-primary/90');
+            } else {
+                saveGradingButton.textContent = '复核无误';
+                saveGradingButton.classList.remove('bg-primary', 'hover:bg-primary/90');
+                saveGradingButton.classList.add('bg-success', 'hover:bg-success/90');
+            }
+        }
+
+        // 监听得分滑动条变化并更新显示得分
+        if (gradingItemsList) { 
+            gradingItemsList.addEventListener('input', (event) => {
+                const target = event.target;
+                if (target.classList.contains('score-slider')) {
+                    const scoreDisplay = target.closest('.flex.items-center').querySelector('.score-display');
+                    if (scoreDisplay) {
+                        scoreDisplay.textContent = Number(target.value).toFixed(1);
+                        updateTotalScore(); // 实时更新总分
+                        // 如果尚未标记为有修改，则进行标记并更新按钮样式
+                        if (!hasGradingChanges) {
+                            hasGradingChanges = true;
+                            updateSaveButtonTextAndColor();
+                        }
+                    }
+                }
+            });
+        }
+
+        // 页面加载时初始化按钮状态
+        window.addEventListener('load', updateSaveButtonTextAndColor);
+
+        // Update total score - Modified to read from range inputs
+        function updateTotalScore() {
+            const scoreSliders = document.querySelectorAll('#grading-items-list .score-slider');
+            const total = Array.from(scoreSliders).reduce((sum, slider) => sum + Number(slider.value), 0);
+
+            // Assuming the current total score is displayed in the header with id="total-score"
+            const totalScoreSpan = document.querySelector('header #total-score');
+            if (totalScoreSpan) {
+                totalScoreSpan.textContent = total.toFixed(1); // Display total score with one decimal place
+            }
+            // Note: The total possible score placeholder '/ [总分 Placeholder]' in the header needs to be dynamically updated
+            // based on the number of questions * points per question (currently 4). This logic is not yet implemented.
+        }
+
+        // Initial total score calculation on page load
+        window.addEventListener('load', updateTotalScore);
+
+        // New: Feedback area interactions
+        gradingItemsList.addEventListener('focusin', (event) => {
+            const target = event.target;
+            if (target.classList.contains('feedback-textarea')) {
+                const actionButtons = target.closest('.question-card').querySelector('.feedback-action-buttons');
+                if (actionButtons) {
+                    actionButtons.classList.remove('hidden');
+                }
+            }
+        });
+
+        // Note: We might need a click outside listener or a save/cancel logic to hide buttons again.
+        // For now, they stay visible once focused.
+
+        // Quick insert buttons for feedback
+        gradingItemsList.addEventListener('click', (event) => {
+            const target = event.target.closest('.quick-insert-btn');
+            if (target) {
+                const valueToInsert = target.getAttribute('data-value');
+                const textarea = target.closest('.relative').querySelector('.feedback-textarea');
+                if (textarea && valueToInsert) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const originalText = textarea.value;
+
+                    textarea.value = originalText.substring(0, start) + valueToInsert + originalText.substring(end);
+
+                    // Move cursor after the inserted text
+                    textarea.selectionStart = textarea.selectionEnd = start + valueToInsert.length;
+                    textarea.focus(); // Keep focus on the textarea
+                }
+            }
+        });
+
+        // Cancel and Save button placeholders (add functionality later)
+        gradingItemsList.addEventListener('click', (event) => {
+             const target = event.target;
+             if (target.classList.contains('cancel-feedback-btn')) {
+                 alert('模拟：点击了取消反馈按钮');
+                 // TODO: Add logic to revert changes and hide buttons
+                  const actionButtons = target.closest('.feedback-action-buttons');
+                   if (actionButtons) {
+                       actionButtons.classList.add('hidden');
+                   }
+             }
+             if (target.classList.contains('save-feedback-btn')) {
+                 alert('模拟：点击了保存反馈按钮');
+                 // TODO: Add logic to save feedback and potentially hide buttons
+                 const actionButtons = target.closest('.feedback-action-buttons');
+                   if (actionButtons) {
+                       actionButtons.classList.add('hidden');
+                   }
+             }
+        });
+
+        // 学生名单模态框功能
+        document.getElementById('student-list-button').addEventListener('click', showStudentListModal);
+
+        function showStudentListModal() {
+            const modal = document.getElementById('student-list-modal');
+            modal.classList.remove('-translate-x-full');
+            modal.classList.add('translate-x-0');
+            modal.classList.remove('hidden'); // 确保背景遮罩显示
+        }
+
+        function hideStudentListModal() {
+            const modal = document.getElementById('student-list-modal');
+            modal.classList.remove('translate-x-0');
+            modal.classList.add('-translate-x-full');
+            // 动画结束后隐藏，避免遮挡点击事件
+            modal.addEventListener('transitionend', function handler() {
+                modal.classList.add('hidden');
+                modal.removeEventListener('transitionend', handler);
+            }, { once: true });
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('student-list-modal').addEventListener('click', function(event) {
+            // 确保点击的是背景而不是模态框内容
+            if (event.target === this) {
+                hideStudentListModal();
+            }
+        });
+
+        // 评分细则模块功能
+        if (gradingItemsList) {
+            gradingItemsList.addEventListener('click', (event) => {
+                const viewRubricBtn = event.target.closest('.view-rubric-btn');
+                if (viewRubricBtn) {
+                    const questionCard = viewRubricBtn.closest('.question-card');
+                    const rubricModule = questionCard.querySelector('.rubric-module');
+                    if (rubricModule) {
+                        rubricModule.classList.remove('hidden');
+                    }
+                }
+
+                const cancelRubricBtn = event.target.closest('.cancel-rubric-btn');
+                if (cancelRubricBtn) {
+                    const rubricModule = cancelRubricBtn.closest('.rubric-module');
+                    if (rubricModule) {
+                        rubricModule.classList.add('hidden');
+                    }
+                }
+
+                const regradeAllBtn = event.target.closest('.regrade-all-btn');
+                if (regradeAllBtn) {
+                    alert('模拟：点击了重新评分全部按钮');
+                    const rubricModule = regradeAllBtn.closest('.rubric-module');
+                    if (rubricModule) {
+                        rubricModule.classList.add('hidden');
+                    }
+                }
+
+                const maxScoreBtn = event.target.closest('.max-score-btn');
+                if (maxScoreBtn) {
+                    const maxScoreDisplay = maxScoreBtn.closest('div').querySelector('.max-score-display');
+                    let currentMax = parseFloat(maxScoreDisplay.textContent);
+                    if (maxScoreBtn.dataset.action === 'increment') {
+                        currentMax = currentMax + 0.5; // Removed max limit
+                    } else if (maxScoreBtn.dataset.action === 'decrement') {
+                        currentMax = Math.max(0.0, currentMax - 0.5); // Min 0.0, decrement by 0.5
+                    }
+                    maxScoreDisplay.textContent = currentMax.toFixed(1);
+                    
+                    // 更新导航栏中的总分
+                    updateTotalMaxScore();
+                }
+            });
+        }
+
+        // 更新导航栏中的总分
+        function updateTotalMaxScore() {
+            const maxScoreDisplays = document.querySelectorAll('.max-score-display');
+            const total = Array.from(maxScoreDisplays).reduce((sum, display) => sum + parseFloat(display.textContent), 0);
+            
+            const totalMaxScoreSpan = document.getElementById('total-max-score');
+            if (totalMaxScoreSpan) {
+                totalMaxScoreSpan.textContent = total.toFixed(1);
+            }
+        }
+
+        // 页面加载时初始化总分
+        window.addEventListener('load', () => {
+            updateTotalMaxScore();
+            updateTotalScore();
+        });
+
+    </script>
+
+</body>
+</html>

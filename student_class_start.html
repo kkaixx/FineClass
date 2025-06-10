@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI阅读PPT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        accent: '#3B82F6',
+                        dark: '#1F2937',
+                        light: '#F3F4F6',
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .bg-gradient-blue {
+                background: linear-gradient(135deg, #165DFF 0%, #3B82F6 100%);
+            }
+            .transition-custom {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark min-h-screen flex flex-col">
+    <!-- 主要内容区 -->
+    <main class="flex-1 flex flex-col md:flex-row h-screen">
+        <!-- 左侧PPT显示区 -->
+        <section class="w-full md:w-7/12 h-screen bg-gray-100 relative transition-all duration-300 overflow-y-auto" id="ppt-section">
+            <!-- New PPT Toolbar -->
+            <div class="bg-white shadow-md p-3 flex items-center justify-between space-x-2 mb-4 text-sm relative">
+                <div class="flex items-center space-x-2">
+                    <a href="student_homepage.html" class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors mr-4">
+                        <i class="fas fa-arrow-left text-base"></i>
+                    </a>
+                    <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="切换文档" id="toggle-document-btn">
+                        <i class="fas fa-copy text-base"></i>
+                    </button>
+                </div>
+
+                <!-- Document List Modal -->
+                <div id="document-list-modal" class="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl p-4 hidden z-10">
+                    <p class="text-gray-500 text-xs mb-2">对话内文件</p>
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="#" class="flex items-center space-x-2 text-gray-800 hover:text-primary hover:bg-gray-50 p-2 rounded transition-colors">
+                                <i class="fas fa-file-pdf text-red-500"></i>
+                                <span>ES_25_08-GPIO.pdf</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center space-x-2 text-gray-800 hover:text-primary hover:bg-gray-50 p-2 rounded transition-colors">
+                                <i class="fas fa-file-pdf text-red-500"></i>
+                                <span>ES-25_07-Interrups.pdf</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Slide View Toggle Button -->
+                <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors mr-2" title="幻灯片视图" id="slide-view-toggle-btn">
+                    <i class="fas fa-th-large text-base"></i>
+                </button>
+
+                <!-- Slide Navigation in toolbar -->
+                <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" id="prev-slide-toolbar">
+                    <i class="fas fa-chevron-left text-xs"></i>
+                </button>
+                <span class="px-1 text-gray-700" id="slide-counter-toolbar">
+                    <span id="current-slide-toolbar">20</span> / <span id="total-slides-toolbar">26</span>
+                </span>
+                <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors border-r border-gray-200 pr-3" id="next-slide-toolbar">
+                    <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+
+                <!-- Translate button with dropdown -->
+                <div class="relative group">
+                    <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors flex items-center" title="翻译" id="translate-btn">
+                        <i class="fas fa-language mr-1"></i>翻译全文 <i class="fas fa-chevron-down text-xs ml-1"></i>
+                    </button>
+                    <div id="translate-dropdown" class="absolute top-full left-0 mt-2 w-36 bg-white rounded-lg shadow-xl p-2 hidden z-10">
+                        <ul class="space-y-1">
+                            <li>
+                                <a href="#" class="block p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors">翻译全文</a>
+                            </li>
+                            <li>
+                                <a href="#" class="block p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors">翻译当前页</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors border-r border-gray-200 pr-3" title="截图提问">
+                    <i class="fas fa-crop-simple mr-1"></i>截图提问
+                </button>
+
+                <!-- Fullscreen button with dropdown -->
+                <div class="relative group">
+                    <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="全屏" id="fullscreen-btn">
+                        <i class="fas fa-expand text-base"></i>
+                    </button>
+                    <div id="fullscreen-dropdown" class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-40 bg-white rounded-lg shadow-xl p-2 hidden z-10">
+                        <ul class="space-y-1">
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-primary hover:bg-gray-100 rounded transition-colors">
+                                    <i class="fas fa-arrows-to-dot mr-2"></i> 自动缩放 <i class="fas fa-check text-primary ml-auto"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors">
+                                    <i class="fas fa-arrows-up-down mr-2"></i> 适合页高
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors">
+                                    <i class="fas fa-arrows-left-right mr-2"></i> 适合页宽
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors">
+                                    <i class="fas fa-file-lines mr-2"></i> 实际大小
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Zoom Out button with tooltip -->
+                <div class="relative group">
+                    <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="缩小">
+                        <i class="fas fa-magnifying-glass-minus text-base"></i>
+                    </button>
+                    <span class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1 bg-black text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none z-20">
+                        缩小
+                        <span class="absolute left-1/2 -translate-x-1/2 w-0 h-0 border-b-4 border-l-4 border-r-4 border-solid border-transparent border-b-black -top-1"></span>
+                    </span>
+                </div>
+
+                <!-- Zoom In button with tooltip -->
+                <div class="relative group">
+                    <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors border-r border-gray-200 pr-3" title="放大">
+                        <i class="fas fa-magnifying-glass-plus text-base"></i>
+                    </button>
+                    <span class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1 bg-black text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none z-20">
+                        放大
+                        <span class="absolute left-1/2 -translate-x-1/2 w-0 h-0 border-b-4 border-l-4 border-r-4 border-solid border-transparent border-b-black -top-1"></span>
+                    </span>
+                </div>
+
+                <!-- Download button with dropdown -->
+                <div class="relative group">
+                    <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="下载" id="download-btn">
+                        <i class="fas fa-download text-base"></i>
+                    </button>
+                    <div id="download-dropdown" class="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-36 bg-white rounded-lg shadow-xl p-2 hidden z-10">
+                        <ul class="space-y-1">
+                            <li>
+                                <a href="#" class="block p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors">下载原文件</a>
+                            </li>
+                            <li>
+                                <a href="#" class="block p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors">下载翻译版</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors" title="切换布局" id="toggle-layout-btn">
+                    <i class="fas fa-chevron-right text-base"></i>
+                </button>
+            </div>
+
+            <!-- New Layout Container for Sidebar and Main PPT Content -->
+            <div id="slide-layout-container" class="flex h-[calc(100%-5rem)] overflow-hidden"> <!-- Approx. toolbar height + margin -->
+                <!-- Thumbnail Sidebar - initially hidden -->
+                <div id="thumbnail-sidebar" class="w-0 overflow-hidden transition-all duration-300 bg-white shadow-lg flex-shrink-0">
+                    <div class="p-4 h-full flex flex-col">
+                        <!-- Tab navigation -->
+                        <div class="flex border-b border-gray-200 mb-4">
+                            <button class="flex-1 py-2 text-center text-sm font-medium text-primary border-b-2 border-primary" id="list-view-tab">
+                                <i class="fas fa-th-list mr-1"></i>
+                            </button>
+                            <button class="flex-1 py-2 text-center text-sm font-medium text-gray-600 hover:text-primary" id="grid-view-tab">
+                                <i class="fas fa-image mr-1"></i>
+                            </button>
+                        </div>
+                        <!-- Thumbnails will go here -->
+                        <div class="flex-1 space-y-2 overflow-y-auto scrollbar-hide" id="thumbnail-list-container">
+                            <!-- Example thumbnails (vertical layout) -->
+                            <div class="w-full bg-gray-200 rounded border-2 border-transparent flex-shrink-0 cursor-pointer p-2">
+                                <img src="https://picsum.photos/200/150?random=10" alt="幻灯片1缩略图" class="w-full h-auto object-contain rounded">
+                                <p class="text-xs text-center pt-1 text-gray-700">19</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded border-2 border-transparent flex-shrink-0 cursor-pointer p-2">
+                                <img src="https://picsum.photos/200/150?random=11" alt="幻灯片2缩略图" class="w-full h-auto object-contain rounded">
+                                <p class="text-xs text-center pt-1 text-gray-700">20</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded border-2 border-transparent flex-shrink-0 cursor-pointer p-2">
+                                <img src="https://picsum.photos/200/150?random=12" alt="幻灯片3缩略图" class="w-full h-auto object-contain rounded">
+                                <p class="text-xs text-center pt-1 text-gray-700">21</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded border-2 border-transparent flex-shrink-0 cursor-pointer p-2">
+                                <img src="https://picsum.photos/200/150?random=13" alt="幻灯片4缩略图" class="w-full h-auto object-contain rounded">
+                                <p class="text-xs text-center pt-1 text-gray-700">22</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded border-2 border-transparent flex-shrink-0 cursor-pointer p-2">
+                                <img src="https://picsum.photos/200/150?random=14" alt="幻灯片5缩略图" class="w-full h-auto object-contain rounded">
+                                <p class="text-xs text-center pt-1 text-gray-700">23</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded border-2 border-transparent flex-shrink-0 cursor-pointer p-2">
+                                <img src="https://picsum.photos/200/150?random=15" alt="幻灯片6缩略图" class="w-full h-auto object-contain rounded">
+                                <p class="text-xs text-center pt-1 text-gray-700">24</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded border-2 border-transparent flex-shrink-0 cursor-pointer p-2">
+                                <img src="https://picsum.photos/200/150?random=16" alt="幻灯片7缩略图" class="w-full h-auto object-contain rounded">
+                                <p class="text-xs text-center pt-1 text-gray-700">25</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded border-2 border-transparent flex-shrink-0 cursor-pointer p-2">
+                                <img src="https://picsum.photos/200/150?random=17" alt="幻灯片8缩略图" class="w-full h-auto object-contain rounded">
+                                <p class="text-xs text-center pt-1 text-gray-700">26</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main PPT Display Area -->
+                <div id="main-ppt-display" class="flex-1 overflow-auto pl-4">
+                    <div class="max-w-3xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:shadow-xl" id="ppt-wrapper">
+                        <div class="aspect-video bg-gray-200 relative flex items-center justify-center" id="ppt-container">
+                            <!-- 示例PPT内容 -->
+                            <img src="https://picsum.photos/800/600?random=10" alt="PPT幻灯片示例" class="max-h-full max-w-full object-contain">
+                            
+                            <!-- 幻灯片控制器 -->
+                            <div class="absolute bottom-4 right-4 flex space-x-2">
+                                <button class="bg-white/80 hover:bg-white text-gray-700 rounded-full p-2 shadow-md transition-all transform hover:scale-110">
+                                    <i class="fas fa-magnifying-glass-minus"></i>
+                                </button>
+                                <button class="bg-white/80 hover:bg-white text-gray-700 rounded-full p-2 shadow-md transition-all transform hover:scale-110">
+                                    <i class="fas fa-magnifying-glass-plus"></i>
+                                </button>
+                                <button class="bg-white/80 hover:bg-white text-gray-700 rounded-full p-2 shadow-md transition-all transform hover:scale-110">
+                                    <i class="fas fa-arrows-up-down-left-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 右侧AI交互区 -->
+        <section class="w-full md:w-5/12 h-screen bg-white border-l border-gray-200 flex flex-col transition-all duration-300" id="ai-section">
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-700">FineClass AI课堂助手</h2>
+                <div class="flex space-x-2">
+                    <div class="relative group">
+                        <button class="p-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors flex items-center" id="ai-summary-btn">
+                            <i class="fas fa-file-lines mr-1"></i>AI课堂纪要
+                            <i class="fas fa-chevron-down text-xs ml-1"></i>
+                        </button>
+                        <div id="ai-summary-dropdown" class="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl p-2 hidden z-10">
+                            <ul class="space-y-1">
+                                <li>
+                                    <a href="#" class="flex items-center p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors" id="view-summary-btn">
+                                        <i class="fas fa-eye mr-2"></i>查看课堂纪要
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" class="flex items-center p-2 text-gray-800 hover:bg-gray-100 rounded transition-colors" id="generate-summary-btn">
+                                        <i class="fas fa-magic mr-2"></i>生成课堂纪要
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI对话区 -->
+            <div class="flex-1 overflow-auto p-4" id="chat-container">
+                <!-- AI欢迎消息 -->
+                <div class="flex space-x-3 mb-4">
+                    <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[90%]">
+                        <p class="text-gray-800">你好！我是AI阅读助手，我可以帮你分析PPT内容、提取要点、解答疑问。请上传你的PPT或者选择当前示例PPT进行分析。</p>
+                    </div>
+                </div>
+                
+                <!-- 用户消息 -->
+                <div class="flex space-x-3 mb-4 justify-end">
+                    <div class="bg-primary text-white rounded-lg rounded-tr-none p-3 max-w-[90%]">
+                        <p>这份PPT的主要内容是什么？</p>
+                    </div>
+                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="h-full w-full object-cover">
+                    </div>
+                </div>
+                
+                <!-- AI回复 -->
+                <div class="flex space-x-3 mb-4">
+                    <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[90%]">
+                        <p class="text-gray-800">这份PPT主要介绍了人工智能在教育领域的应用，包括智能辅导系统、自适应学习平台和个性化教育方案等内容。</p>
+                        <div class="mt-2 p-2 bg-white rounded border border-gray-200">
+                            <p class="text-sm font-medium text-gray-700">PPT要点提取</p>
+                            <ul class="text-sm text-gray-600 mt-1 space-y-1">
+                                <li class="flex items-start">
+                                    <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                    <span>人工智能在教育中的四大应用场景</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                    <span>智能辅导系统的技术架构和优势</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                    <span>自适应学习平台的个性化推荐算法</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                    <span>教育领域AI应用的挑战与解决方案</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 用户消息 -->
+                <div class="flex space-x-3 mb-4 justify-end">
+                    <div class="bg-primary text-white rounded-lg rounded-tr-none p-3 max-w-[90%]">
+                        <p>请详细解释一下智能辅导系统的技术架构</p>
+                    </div>
+                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="h-full w-full object-cover">
+                    </div>
+                </div>
+                
+                <!-- AI回复（正在输入） -->
+                <div class="flex space-x-3 mb-4">
+                    <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[90%]">
+                        <div class="flex space-x-1">
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 输入区域 -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="relative">
+                    <textarea 
+                        class="w-full border border-gray-300 rounded-lg p-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none transition-all duration-200" 
+                        rows="3" 
+                        placeholder="向AI提问..."
+                    ></textarea>
+                    <button class="absolute right-3 bottom-3 bg-primary text-white rounded-full p-2 hover:bg-primary/90 transition-colors">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="flex items-center justify-between mt-3 text-sm text-gray-500">
+                    <div class="flex space-x-3">
+                        <button class="hover:text-primary transition-colors">
+                            <i class="fas fa-paperclip mr-1"></i>附件
+                        </button>
+                        <button class="hover:text-primary transition-colors">
+                            <i class="fas fa-microphone mr-1"></i>语音输入
+                        </button>
+                    </div>
+                    <button class="hover:text-primary transition-colors">
+                        <i class="fas fa-keyboard mr-1"></i>快捷键
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 模拟PPT幻灯片切换
+        document.getElementById('prev-slide-toolbar').addEventListener('click', function() {
+            const currentSlide = parseInt(document.getElementById('current-slide-toolbar').textContent);
+            if (currentSlide > 1) {
+                document.getElementById('current-slide-toolbar').textContent = currentSlide - 1;
+                updateSlidePreview();
+            }
+        });
+        
+        document.getElementById('next-slide-toolbar').addEventListener('click', function() {
+            const currentSlide = parseInt(document.getElementById('current-slide-toolbar').textContent);
+            const totalSlides = parseInt(document.getElementById('total-slides-toolbar').textContent);
+            if (currentSlide < totalSlides) {
+                document.getElementById('current-slide-toolbar').textContent = currentSlide + 1;
+                updateSlidePreview();
+            }
+        });
+        
+        // 更新幻灯片预览
+        function updateSlidePreview() {
+            const currentSlide = parseInt(document.getElementById('current-slide-toolbar').textContent);
+            const pptContainer = document.getElementById('ppt-container');
+            const img = pptContainer.querySelector('img');
+            img.src = `https://picsum.photos/800/600?random=${9 + currentSlide}`;
+            img.alt = `幻灯片${currentSlide}预览`;
+            
+            // 高亮当前缩略图
+            const thumbnails = document.querySelectorAll('#thumbnail-list-container > div');
+            thumbnails.forEach((thumbnail, index) => {
+                if (index + 19 === currentSlide) { // Adjust for starting slide number 19
+                    thumbnail.classList.add('border-primary');
+                    thumbnail.classList.remove('border-transparent', 'hover:border-gray-400');
+                } else {
+                    thumbnail.classList.remove('border-primary');
+                    thumbnail.classList.add('border-transparent', 'hover:border-gray-400');
+                }
+            });
+        }
+        
+        // 模拟AI回复
+        const textarea = document.querySelector('textarea');
+        const sendButton = textarea.parentElement.querySelector('button');
+        
+        sendButton.addEventListener('click', function() {
+            if (textarea.value.trim() === '') return;
+            
+            // 添加用户消息
+            const chatContainer = document.getElementById('chat-container');
+            const userMessageHtml = `
+                <div class="flex space-x-3 mb-4 justify-end">
+                    <div class="bg-primary text-white rounded-lg rounded-tr-none p-3 max-w-[90%]">
+                        <p>${textarea.value}</p>
+                    </div>
+                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img src="https://picsum.photos/200/200?random=1" alt="用户头像" class="h-full w-full object-cover">
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', userMessageHtml);
+            
+            // 添加AI正在输入状态
+            const typingHtml = `
+                <div class="flex space-x-3 mb-4">
+                    <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[90%]">
+                        <div class="flex space-x-1">
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', typingHtml);
+            
+            // 滚动到底部
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // 清空输入框
+            textarea.value = '';
+            
+            // 模拟AI回复（2秒后）
+            setTimeout(() => {
+                // 移除正在输入状态
+                chatContainer.removeChild(chatContainer.lastElementChild);
+                
+                // 添加AI回复
+                const aiResponseHtml = `
+                    <div class="flex space-x-3 mb-4">
+                        <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[90%]">
+                            <p class="text-gray-800">感谢你的提问。根据当前幻灯片内容，智能辅导系统的技术架构主要包括以下几个核心组件：</p>
+                            <div class="mt-2 p-2 bg-white rounded border border-gray-200">
+                                <p class="text-sm font-medium text-gray-700">智能辅导系统技术架构</p>
+                                <ul class="text-sm text-gray-600 mt-1 space-y-1">
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                        <span>学生模型：跟踪学生的知识状态、学习进度和能力水平</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                        <span>领域模型：表示教学内容的知识库和结构</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                        <span>教学策略模型：根据学生状态和领域知识决定最佳教学方法</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                        <span>用户界面：与学生交互的界面，包括问题呈现和反馈机制</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                        <span>自然语言处理模块：理解学生的问题并生成自然语言反馈</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <p class="text-gray-800 mt-2">这些组件协同工作，使系统能够根据学生的学习需求提供个性化的指导和反馈。</p>
+                        </div>
+                    </div>
+                `;
+                chatContainer.insertAdjacentHTML('beforeend', aiResponseHtml);
+                
+                // 滚动到底部
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 2000);
+        });
+        
+        // 按Enter发送消息（Shift+Enter换行）
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendButton.click();
+            }
+        });
+        
+        // 切换布局显示逻辑
+        const toggleLayoutBtn = document.getElementById('toggle-layout-btn');
+        const pptSection = document.getElementById('ppt-section');
+        const aiSection = document.getElementById('ai-section');
+        const mainContent = document.querySelector('main');
+        const pptWrapper = document.getElementById('ppt-wrapper');
+
+        toggleLayoutBtn.addEventListener('click', () => {
+            const icon = toggleLayoutBtn.querySelector('i');
+            
+            if (pptSection.classList.contains('w-full')) {
+                // 恢复原始布局
+                pptSection.classList.remove('w-full');
+                pptSection.classList.add('w-7/12');
+                aiSection.classList.remove('hidden');
+                aiSection.classList.add('w-5/12');
+                mainContent.classList.remove('flex-col');
+                mainContent.classList.add('flex-row');
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+                toggleLayoutBtn.title = '切换布局';
+                // 恢复 PPT 容器最大宽度
+                pptWrapper.classList.remove('max-w-full');
+                pptWrapper.classList.add('max-w-3xl');
+            } else {
+                // 切换到全屏
+                pptSection.classList.remove('w-7/12', 'md:w-7/12');
+                pptSection.classList.add('w-full');
+                aiSection.classList.remove('w-5/12', 'md:w-5/12');
+                aiSection.classList.add('hidden');
+                mainContent.classList.remove('flex-row', 'md:flex-row');
+                mainContent.classList.add('flex-col');
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-left');
+                toggleLayoutBtn.title = '恢复布局';
+                // 移除 PPT 容器最大宽度限制
+                pptWrapper.classList.remove('max-w-3xl');
+                pptWrapper.classList.add('max-w-full');
+            }
+        });
+
+        // 响应式布局切换
+        function handleResize() {
+            const pptSection = document.getElementById('ppt-section');
+            const aiSection = document.getElementById('ai-section');
+            const mainContent = document.querySelector('main');
+            const pptWrapper = document.getElementById('ppt-wrapper');
+            
+            if (window.innerWidth < 768) {
+                // 移动端：默认显示PPT，点击切换
+                if (!pptSection.classList.contains('w-full')) {
+                    pptSection.classList.remove('w-7/12', 'md:w-7/12');
+                    pptSection.classList.add('w-full');
+                    aiSection.classList.remove('w-5/12', 'md:w-5/12');
+                    aiSection.classList.add('w-full', 'hidden');
+                    mainContent.classList.remove('flex-row', 'md:flex-row');
+                    mainContent.classList.add('flex-col');
+                    // 移除 PPT 容器最大宽度限制
+                    pptWrapper.classList.remove('max-w-3xl');
+                    pptWrapper.classList.add('max-w-full');
+                }
+            } else {
+                // 桌面端：根据当前状态决定是否恢复布局
+                if (!pptSection.classList.contains('w-full')) {
+                    pptSection.classList.remove('w-full');
+                    pptSection.classList.add('w-7/12');
+                    aiSection.classList.remove('w-full', 'hidden');
+                    aiSection.classList.add('w-5/12');
+                    mainContent.classList.remove('flex-col');
+                    mainContent.classList.add('flex-row');
+                    // 恢复 PPT 容器最大宽度
+                    pptWrapper.classList.remove('max-w-full');
+                    pptWrapper.classList.add('max-w-3xl');
+                }
+            }
+        }
+        
+        // 初始化
+        window.addEventListener('resize', handleResize);
+        handleResize();
+        
+        // 幻灯片视图切换逻辑
+        const slideViewToggleBtn = document.getElementById('slide-view-toggle-btn');
+        const thumbnailSidebar = document.getElementById('thumbnail-sidebar');
+        const mainPptDisplay = document.getElementById('main-ppt-display');
+
+        slideViewToggleBtn.addEventListener('click', () => {
+            if (thumbnailSidebar.classList.contains('w-0')) {
+                // Show sidebar
+                thumbnailSidebar.classList.remove('w-0', 'overflow-hidden');
+                thumbnailSidebar.classList.add('w-64', 'px-4'); // Add padding when visible
+                mainPptDisplay.classList.remove('pl-4'); // Remove main content left padding as sidebar adds it
+            } else {
+                // Hide sidebar
+                thumbnailSidebar.classList.remove('w-64', 'px-4');
+                thumbnailSidebar.classList.add('w-0', 'overflow-hidden');
+                mainPptDisplay.classList.add('pl-4'); // Re-add main content left padding
+            }
+        });
+
+        // 切换文档按钮模态框显示/隐藏逻辑
+        const toggleDocumentBtn = document.getElementById('toggle-document-btn');
+        const documentListModal = document.getElementById('document-list-modal');
+
+        let hideTimeout;
+
+        toggleDocumentBtn.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+            documentListModal.classList.remove('hidden');
+        });
+
+        toggleDocumentBtn.addEventListener('mouseleave', () => {
+            hideTimeout = setTimeout(() => {
+                documentListModal.classList.add('hidden');
+            }, 200);
+        });
+
+        documentListModal.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+        });
+
+        documentListModal.addEventListener('mouseleave', () => {
+            hideTimeout = setTimeout(() => {
+                documentListModal.classList.add('hidden');
+            }, 200);
+        });
+
+        // 翻译按钮下拉菜单显示/隐藏逻辑
+        const translateBtn = document.getElementById('translate-btn');
+        const translateDropdown = document.getElementById('translate-dropdown');
+
+        let translateHideTimeout;
+
+        translateBtn.addEventListener('mouseenter', () => {
+            clearTimeout(translateHideTimeout);
+            translateDropdown.classList.remove('hidden');
+        });
+
+        translateBtn.addEventListener('mouseleave', () => {
+            translateHideTimeout = setTimeout(() => {
+                translateDropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        translateDropdown.addEventListener('mouseenter', () => {
+            clearTimeout(translateHideTimeout);
+        });
+
+        translateDropdown.addEventListener('mouseleave', () => {
+            translateHideTimeout = setTimeout(() => {
+                translateDropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        // 全屏按钮下拉菜单显示/隐藏逻辑
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const fullscreenDropdown = document.getElementById('fullscreen-dropdown');
+
+        let fullscreenHideTimeout;
+
+        fullscreenBtn.addEventListener('mouseenter', () => {
+            clearTimeout(fullscreenHideTimeout);
+            fullscreenDropdown.classList.remove('hidden');
+        });
+
+        fullscreenBtn.addEventListener('mouseleave', () => {
+            fullscreenHideTimeout = setTimeout(() => {
+                fullscreenDropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        fullscreenDropdown.addEventListener('mouseenter', () => {
+            clearTimeout(fullscreenHideTimeout);
+        });
+
+        fullscreenDropdown.addEventListener('mouseleave', () => {
+            fullscreenHideTimeout = setTimeout(() => {
+                fullscreenDropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        // 下载按钮下拉菜单显示/隐藏逻辑
+        const downloadBtn = document.getElementById('download-btn');
+        const downloadDropdown = document.getElementById('download-dropdown');
+
+        let downloadHideTimeout;
+
+        downloadBtn.addEventListener('mouseenter', () => {
+            clearTimeout(downloadHideTimeout);
+            downloadDropdown.classList.remove('hidden');
+        });
+
+        downloadBtn.addEventListener('mouseleave', () => {
+            downloadHideTimeout = setTimeout(() => {
+                downloadDropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        downloadDropdown.addEventListener('mouseenter', () => {
+            clearTimeout(downloadHideTimeout);
+        });
+
+        downloadDropdown.addEventListener('mouseleave', () => {
+            downloadHideTimeout = setTimeout(() => {
+                downloadDropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        // AI课堂纪要按钮下拉菜单显示/隐藏逻辑
+        const aiSummaryBtn = document.getElementById('ai-summary-btn');
+        const aiSummaryDropdown = document.getElementById('ai-summary-dropdown');
+        const viewSummaryBtn = document.getElementById('view-summary-btn');
+        const generateSummaryBtn = document.getElementById('generate-summary-btn');
+
+        let summaryHideTimeout;
+
+        aiSummaryBtn.addEventListener('mouseenter', () => {
+            clearTimeout(summaryHideTimeout);
+            aiSummaryDropdown.classList.remove('hidden');
+        });
+
+        aiSummaryBtn.addEventListener('mouseleave', () => {
+            summaryHideTimeout = setTimeout(() => {
+                aiSummaryDropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        aiSummaryDropdown.addEventListener('mouseenter', () => {
+            clearTimeout(summaryHideTimeout);
+        });
+
+        aiSummaryDropdown.addEventListener('mouseleave', () => {
+            summaryHideTimeout = setTimeout(() => {
+                aiSummaryDropdown.classList.add('hidden');
+            }, 200);
+        });
+
+        // 查看课堂纪要
+        viewSummaryBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const chatContainer = document.getElementById('chat-container');
+            
+            // 添加AI消息
+            const aiMessageHtml = `
+                <div class="flex space-x-3 mb-4">
+                    <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[90%]">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-gray-700">课堂纪要</h3>
+                            <span class="text-xs text-gray-500">2024-03-21 14:30</span>
+                        </div>
+                        <div class="bg-white rounded border border-gray-200 p-3">
+                            <div class="space-y-3">
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 mb-1">课程要点</h4>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li class="flex items-start">
+                                            <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                            <span>人工智能在教育领域的应用场景分析</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                            <span>智能辅导系统的技术架构详解</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                            <span>自适应学习平台的个性化推荐算法</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 mb-1">关键概念</h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">智能辅导系统</span>
+                                        <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">自适应学习</span>
+                                        <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">个性化推荐</span>
+                                        <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">知识图谱</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 mb-1">课堂互动</h4>
+                                    <div class="text-sm text-gray-600">
+                                        <p>• 讨论了智能辅导系统在实际教学中的应用案例</p>
+                                        <p>• 分析了自适应学习平台的优势和挑战</p>
+                                        <p>• 探讨了AI教育应用的未来发展趋势</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', aiMessageHtml);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+        // 生成课堂纪要
+        generateSummaryBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const chatContainer = document.getElementById('chat-container');
+            
+            // 添加AI正在生成的消息
+            const typingHtml = `
+                <div class="flex space-x-3 mb-4">
+                    <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[90%]">
+                        <p class="text-gray-800">正在生成课堂纪要，请稍候...</p>
+                        <div class="flex space-x-1 mt-2">
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                            <div class="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatContainer.insertAdjacentHTML('beforeend', typingHtml);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // 模拟生成过程（2秒后显示结果）
+            setTimeout(() => {
+                // 移除正在生成的消息
+                chatContainer.removeChild(chatContainer.lastElementChild);
+                
+                // 添加生成的课堂纪要
+                const aiMessageHtml = `
+                    <div class="flex space-x-3 mb-4">
+                        <div class="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                        <div class="bg-gray-100 rounded-lg rounded-tl-none p-3 max-w-[90%]">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-sm font-medium text-gray-700">课堂纪要生成完成</h3>
+                                <span class="text-xs text-gray-500">刚刚</span>
+                            </div>
+                            <div class="bg-white rounded border border-gray-200 p-3">
+                                <div class="space-y-3">
+                                    <div>
+                                        <h4 class="text-sm font-medium text-gray-700 mb-1">课程要点</h4>
+                                        <ul class="text-sm text-gray-600 space-y-1">
+                                            <li class="flex items-start">
+                                                <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                                <span>人工智能在教育领域的应用场景分析</span>
+                                            </li>
+                                            <li class="flex items-start">
+                                                <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                                <span>智能辅导系统的技术架构详解</span>
+                                            </li>
+                                            <li class="flex items-start">
+                                                <i class="fas fa-circle text-xs mt-1.5 mr-2 text-primary"></i>
+                                                <span>自适应学习平台的个性化推荐算法</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-gray-700 mb-1">关键概念</h4>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">智能辅导系统</span>
+                                            <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">自适应学习</span>
+                                            <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">个性化推荐</span>
+                                            <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">知识图谱</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-gray-700 mb-1">课堂互动</h4>
+                                        <div class="text-sm text-gray-600">
+                                            <p>• 讨论了智能辅导系统在实际教学中的应用案例</p>
+                                            <p>• 分析了自适应学习平台的优势和挑战</p>
+                                            <p>• 探讨了AI教育应用的未来发展趋势</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatContainer.insertAdjacentHTML('beforeend', aiMessageHtml);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 2000);
+        });
+
+        // Call updateSlidePreview on initial load to set correct highlight
+        updateSlidePreview();
+    </script>
+</body>
+</html>
+    

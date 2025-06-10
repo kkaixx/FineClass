@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FineClass帆课 - 智能作业批改系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        accent: '#3B82F6',
+                        dark: '#1F2937',
+                        light: '#F3F4F6',
+                        brandBlue: '#2A72FF',
+                        borderGray: '#DCDFE6',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .bg-gradient-white-blue {
+                background: linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #1e88e5 100%);
+            }
+        }
+    </style>
+    <style>
+        .logo-scroll {
+            animation: scroll-left 60s linear infinite;
+        }
+        .logo-scroll:hover {
+            animation-play-state: paused;
+        }
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+        .nav-transparent {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+            will-change: transform;
+        }
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 50;
+        }
+        .mobile-menu.active {
+            display: block;
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased bg-white min-h-screen">
+
+    <!-- Top Banner -->
+    <div class="bg-blue-600 text-white text-center py-3 px-4">
+        <p class="text-sm">提供1个月免费试用。立即<a href="login.html" class="underline font-bold hover:text-blue-200">免费试用！</a></p>
+    </div>
+
+    <!-- Header -->
+    <header id="navbar" class="fixed w-full top-0 z-50 transition-all duration-300 bg-white shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center">
+                <!-- Logo -->
+                <div class="bg-[#165DFF] text-white h-10 w-10 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-book text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold text-[#165DFF] ml-2">FineClass帆课</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#features" class="text-gray-600 hover:text-blue-600 transition duration-300">功能</a>
+                <a href="#advantage" class="text-gray-600 hover:text-blue-600 transition duration-300">优势</a>
+                <a href="#how-it-works" class="text-gray-600 hover:text-blue-600 transition duration-300">工作原理</a>
+                <a href="#testimonials" class="text-gray-600 hover:text-blue-600 transition duration-300">客户评价</a>
+                <a href="#contact" class="text-gray-600 hover:text-blue-600 transition duration-300">联系我们</a>
+            </div>
+            <div class="hidden md:flex items-center space-x-4">
+                <a href="login.html" class="text-gray-600 hover:text-blue-600 transition duration-300 py-2 px-4 border border-gray-300 rounded-lg">登录</a>
+                <a href="login.html" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">免费试用</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button id="menu-btn" class="md:hidden text-gray-600 hover:text-blue-600 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <div class="mobile-menu" id="mobile-menu">
+                <a href="#features" class="block text-gray-600 hover:text-blue-600 transition duration-300 py-2">功能</a>
+                <a href="#advantage" class="block text-gray-600 hover:text-blue-600 transition duration-300 py-2">优势</a>
+                <a href="#how-it-works" class="block text-gray-600 hover:text-blue-600 transition duration-300 py-2">工作原理</a>
+                <a href="#testimonials" class="block text-gray-600 hover:text-blue-600 transition duration-300 py-2">客户评价</a>
+                <a href="#contact" class="block text-gray-600 hover:text-blue-600 transition duration-300 py-2">联系我们</a>
+                <a href="login.html" class="block text-blue-600 hover:text-blue-700 transition duration-300 py-2 border-t border-gray-200 mt-4">登录</a>
+                <a href="login.html" class="block bg-blue-600 text-white py-3 mt-2 rounded-lg hover:bg-blue-700 transition duration-300">免费试用</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="py-24 px-4 pt-32 bg-gradient-white-blue">
+        <div class="container mx-auto flex flex-col md:flex-row items-center justify-between">
+            <div class="md:w-1/2 text-center md:text-left mb-10 md:mb-0">
+                <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+                    <span class="block text-[#165DFF]">FineClass帆课</span>
+                    <span class="block text-blue-800">AI教学辅助工具</span>
+                </h1>
+                <p class="text-lg text-gray-700 mb-8 max-w-xl">
+                    教师应该把时间花在教学上，而不是埋头批改堆积如山的作业。<br>
+                    学生上课时应该更高效地使用AI解决疑问，而不是苦苦思索。<br>
+                    加入我们，共同推进教育现代化。
+                </p>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <a href="login.html" class="bg-blue-600 text-white py-3 px-8 rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-300 shadow-lg transform hover:scale-105">免费试用</a>
+                    <a href="#contact" class="bg-white border border-gray-300 text-gray-800 py-3 px-8 rounded-lg text-lg font-semibold hover:bg-gray-100 transition duration-300 shadow-md transform hover:scale-105">联系我们</a>
+                </div>
+            </div>
+            <div class="md:w-1/2 flex justify-center md:justify-end">
+                <img src="https://images.unsplash.com/photo-1542435503-956c469947f6?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="产品演示" class="rounded-lg shadow-xl max-w-full h-auto transform hover:scale-105 transition duration-500">
+            </div>
+        </div>
+
+        <!-- University Logos Section -->
+        <div class="mt-16 overflow-hidden">
+            <div class="relative h-24">
+                <div class="absolute inset-0 overflow-hidden">
+                    <div class="flex logo-scroll whitespace-nowrap">
+                        <!-- 左侧重复组 -->
+                        <div class="flex space-x-8">
+                            <img src="https://picsum.photos/80/80?random=1" alt="大学1校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=2" alt="大学2校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=3" alt="大学3校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=4" alt="大学4校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=5" alt="大学5校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=6" alt="大学6校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=7" alt="大学7校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=8" alt="大学8校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                        </div>
+                        <!-- 右侧重复组 -->
+                        <div class="flex space-x-8">
+                            <img src="https://picsum.photos/80/80?random=1" alt="大学1校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=2" alt="大学2校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=3" alt="大学3校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=4" alt="大学4校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=5" alt="大学5校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=6" alt="大学6校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=7" alt="大学7校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                            <img src="https://picsum.photos/80/80?random=8" alt="大学8校徽" class="h-16 w-16 object-contain grayscale hover:grayscale-0 transition duration-300">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section id="advantage" class="py-16 px-4">
+        <div class="container mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="stat-card bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="text-5xl font-bold text-blue-600 mb-4">3倍</div>
+                    <div class="text-xl font-semibold text-gray-800 mb-2">批改速度</div>
+                    <p class="text-gray-600">节省教师宝贵时间，让您有更多精力投入教学</p>
+                </div>
+                <div class="stat-card bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="text-5xl font-bold text-blue-600 mb-4">30,000+</div>
+                    <div class="text-xl font-semibold text-gray-800 mb-2">已批改作业</div>
+                    <p class="text-gray-600">每天处理大量作业，确保学生及时获得反馈</p>
+                </div>
+                <div class="stat-card bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="text-5xl font-bold text-blue-600 mb-4">99%</div>
+                    <div class="text-xl font-semibold text-gray-800 mb-2">批改准确率</div>
+                    <p class="text-gray-600">采用先进视觉技术，确保高度准确的批改结果</p>
+                </div>
+                <div class="stat-card bg-white p-8 rounded-xl shadow-lg text-center">
+                    <div class="text-5xl font-bold text-blue-600 mb-4">100%</div>
+                    <div class="text-xl font-semibold text-gray-800 mb-2">提升学习效果</div>
+                    <p class="text-gray-600">根据使用数据统计，学生学习效果显著提升</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 px-4 bg-white">
+        <div class="container mx-auto text-center">
+            <h2 class="text-4xl font-extrabold text-gray-900 mb-12">核心功能</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <div class="feature-card p-8 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-blue-600 mb-4">
+                        <i class="fas fa-magic text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">智能批改</h3>
+                    <p class="text-gray-700">利用先进的AI技术，自动批改多种类型的作业，节省教师宝贵时间。</p>
+                </div>
+                <div class="feature-card p-8 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-blue-600 mb-4">
+                        <i class="fas fa-chalkboard-teacher text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">课堂AI交互</h3>
+                    <p class="text-gray-700">在课堂上，学生可以随时通过AI工具提问并获得即时解答，提高学习效率。</p>
+                </div>
+                <div class="feature-card p-8 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-blue-600 mb-4">
+                        <i class="fas fa-chart-line text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">数据分析</h3>
+                    <p class="text-gray-700">提供详细的学生表现数据分析，帮助教师更好地了解学生学习情况。</p>
+                </div>
+                <div class="feature-card p-8 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-blue-600 mb-4">
+                        <i class="fas fa-comments text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">AI作业反馈</h3>
+                    <p class="text-gray-700">学生获得作业个性化反馈，促进及时学习和改进。</p>
+                </div>
+                <div class="feature-card p-8 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-blue-600 mb-4">
+                        <i class="fas fa-cogs text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">可定制规则</h3>
+                    <p class="text-gray-700">教师可根据课程需求自定义批改规则和评分标准。</p>
+                </div>
+                <div class="feature-card p-8 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
+                    <div class="text-blue-600 mb-4">
+                        <i class="fas fa-shield-alt text-5xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">安全可靠</h3>
+                    <p class="text-gray-700">数据加密存储，确保师生信息和作业内容的安全。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-16 px-4 bg-gray-50">
+        <div class="container mx-auto flex flex-col md:flex-row items-center justify-between">
+            <div class="md:w-1/2 flex justify-center md:justify-start mb-10 md:mb-0 md:pr-8">
+                <img src="https://picsum.photos/800/600?random=20" alt="产品工作原理演示" class="rounded-lg shadow-xl max-w-full h-auto border-4 border-blue-200">
+            </div>
+            <div class="md:w-1/2 text-center md:text-left">
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-6">产品如何运作？</h2>
+                <p class="text-lg text-gray-700 mb-4">
+                    我们的产品旨在简化作业批改流程，让教师更专注于教学。以下是其工作原理：
+                </p>
+                <ul class="list-disc list-inside text-gray-700 space-y-3 mb-8">
+                    <li><span class="font-semibold text-blue-600">上传作业：</span> 教师可以轻松上传学生作业，支持多种文件格式。</li>
+                    <li><span class="font-semibold text-blue-600">智能分析：</span> AI系统自动分析作业内容，识别错误和重点。</li>
+                    <li><span class="font-semibold text-blue-600">生成反馈：</span> 系统生成详细的、个性化的反馈和评分。</li>
+                    <li><span class="font-semibold text-blue-600">轻松查看：</span> 教师和学生可以在用户友好的界面中查看结果。</li>
+                </ul>
+                <a href="#" class="bg-blue-600 text-white py-3 px-8 rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-300 transform hover:scale-105">了解更多</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-16 px-4 bg-gray-50">
+        <div class="container mx-auto">
+            <h2 class="text-4xl font-extrabold text-gray-900 mb-12 text-center">客户评价</h2>
+
+            <!-- Main Testimonial Card -->
+            <div class="max-w-4xl mx-auto bg-white p-10 rounded-lg shadow-xl mb-12 relative flex items-center justify-center flex-col md:flex-row">
+                <i class="fas fa-quote-left text-gray-300 text-6xl absolute top-4 left-4 opacity-25"></i>
+                <div class="flex-shrink-0 md:mr-8 mb-6 md:mb-0">
+                    <img src="https://picsum.photos/120/120?random=10" alt="Cal Poly Humboldt校徽" class="h-24 w-24 object-contain mx-auto md:mx-0">
+                    <p class="text-center text-gray-600 mt-2 text-sm">Cal Poly Humboldt</p>
+                </div>
+                <div class="text-center md:text-left">
+                    <p class="text-xl italic text-gray-700 mb-6">
+                        "FineClass帆课提供了自动化评分、评语生成和实质性反馈的水平，这在其他教学工具中前所未见，无论是AI还是其他工具。每位教师都希望为学生提供详细的作业反馈，但通常没有时间这样做。FineClass帆课让您能将更多时间专注于提高学生的学习成果，而不是埋头于手动批改。"
+                    </p>
+                    <div class="flex items-center justify-center md:justify-start">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cfdce54f?auto=format&fit=crop&q=80&w=1780&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Keith Sollers" class="w-16 h-16 rounded-full mr-4 object-cover border-2 border-blue-200">
+                        <div>
+                            <p class="font-bold text-gray-900">Keith Sollers</p>
+                            <p class="text-gray-600 text-sm">Cal Poly Humboldt</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smaller Testimonial Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Card 1: Occidental College -->
+                <div class="bg-white p-6 rounded-lg shadow-md relative flex flex-col items-center text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-quote-left text-gray-300 text-4xl absolute top-4 left-4 opacity-25"></i>
+                    <img src="https://picsum.photos/80/80?random=11" alt="Occidental College校徽" class="h-16 w-16 object-contain mb-4">
+                    <p class="text-base italic text-gray-700 mb-4">
+                        "我很高兴FineClass帆课提供了详细的学生反馈，我无需亲自花费时间。"
+                    </p>
+                    <div>
+                        <p class="font-bold text-gray-900">化学教授</p>
+                        <p class="text-gray-600 text-sm">Occidental College</p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Ithaca College -->
+                <div class="bg-white p-6 rounded-lg shadow-md relative flex flex-col items-center text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-quote-left text-gray-300 text-4xl absolute top-4 left-4 opacity-25"></i>
+                    <img src="https://picsum.photos/80/80?random=12" alt="Ithaca College校徽" class="h-16 w-16 object-contain mb-4">
+                    <p class="text-base italic text-gray-700 mb-4">
+                        "这对我来说是巨大的价值增值。它提供了学生以前从未得到过的反馈，同时将我的时间减少了70%。"
+                    </p>
+                    <div>
+                        <p class="font-bold text-gray-900">物理教授</p>
+                        <p class="text-gray-600 text-sm">Ithaca College</p>
+                    </div>
+                </div>
+
+                <!-- Card 3: Cornell University -->
+                <div class="bg-white p-6 rounded-lg shadow-md relative flex flex-col items-center text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-quote-left text-gray-300 text-4xl absolute top-4 left-4 opacity-25"></i>
+                    <img src="https://picsum.photos/80/80?random=13" alt="Cornell University校徽" class="h-16 w-16 object-contain mb-4">
+                    <p class="text-base italic text-gray-700 mb-4">
+                        "当天就拿到了我的成绩，太棒了！反馈非常具体且有帮助。它准确地告诉我哪里出错了，帮助我更有效地学习。"
+                    </p>
+                    <div>
+                        <p class="font-bold text-gray-900">学生</p>
+                        <p class="text-gray-600 text-sm">Cornell University</p>
+                    </div>
+                </div>
+
+                <!-- Card 4: Hunter College -->
+                <div class="bg-white p-6 rounded-lg shadow-md relative flex flex-col items-center text-center transform hover:scale-105 transition duration-300">
+                    <i class="fas fa-quote-left text-gray-300 text-4xl absolute top-4 left-4 opacity-25"></i>
+                    <img src="https://picsum.photos/80/80?random=14" alt="Hunter College校徽" class="h-16 w-16 object-contain mb-4">
+                    <p class="text-base italic text-gray-700 mb-4">
+                        "FineClass帆课为我减轻了许多负担。令人印象深刻的技术。Max和Aman对我的请求和建议都非常积极响应。"
+                    </p>
+                    <div>
+                        <p class="font-bold text-gray-900">化学教授</p>
+                        <p class="text-gray-600 text-sm">Hunter College</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Us Section -->
+    <section id="contact" class="py-16 px-4 bg-white">
+        <div class="container mx-auto">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-6 text-center">联系我们</h2>
+                <p class="text-lg text-gray-700 mb-8 text-center">如有任何问题、使用咨询或商务合作提议，请随时与我们联系</p>
+                
+                <form class="space-y-6" id="contact-form">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                            <input type="text" id="name" name="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300" placeholder="请输入您的姓名" required>
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                            <input type="email" id="email" name="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300" placeholder="请输入您的邮箱" required>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">电话</label>
+                        <input type="tel" id="phone" name="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300" placeholder="请输入您的电话" required>
+                    </div>
+                    
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">信息</label>
+                        <textarea id="message" name="message" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-300" placeholder="请输入您的留言" required></textarea>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <button type="submit" class="bg-blue-600 text-white py-3 px-8 rounded-lg text-lg font-semibold hover:bg-blue-700 transition duration-300 shadow-lg transform hover:scale-105">提交</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="bg-blue-600 text-white py-16 px-4 text-center">
+        <div class="container mx-auto">
+            <h2 class="text-4xl font-extrabold mb-4">立即开始，体验高效批改！</h2>
+            <p class="text-xl mb-8">加入成千上万的教师，轻松管理和批改作业。</p>
+            <a href="login.html" class="bg-white text-blue-600 py-3 px-8 rounded-lg text-lg font-semibold hover:bg-blue-100 transition duration-300 shadow-lg transform hover:scale-105">免费试用</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12 px-4">
+        <div class="container mx-auto text-center md:text-left grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                <h3 class="text-xl font-bold mb-4">FineClass帆课</h3>
+                <p class="text-gray-400 text-sm">简化作业批改，赋能教育工作者。</p>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">快速链接</h3>
+                <ul class="space-y-2">
+                    <li><a href="#features" class="text-gray-400 hover:text-white transition duration-300">功能</a></li>
+                    <li><a href="#advantage" class="text-gray-400 hover:text-white transition duration-300">优势</a></li>
+                    <li><a href="#how-it-works" class="text-gray-400 hover:text-white transition duration-300">工作原理</a></li>
+                    <li><a href="#testimonials" class="text-gray-400 hover:text-white transition duration-300">客户评价</a></li>
+                    <li><a href="#contact" class="text-gray-400 hover:text-white transition duration-300">联系我们</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">法律声明</h3>
+                <ul class="space-y-2">
+                    <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">隐私政策</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition duration-300">服务条款</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">联系我们</h3>
+                <p class="text-gray-400">邮箱: info@yourproduct.com</p>
+                <p class="text-gray-400">电话: +1 (123) 456-7890</p>
+                <div class="flex space-x-4 mt-4 justify-center md:justify-start">
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300"><i class="fab fa-twitter text-2xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300"><i class="fab fa-facebook-f text-2xl"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition duration-300"><i class="fab fa-linkedin-in text-2xl"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-gray-700 mt-8 pt-8 text-center">
+            <p class="text-gray-500 text-sm">&copy; 2023 FineClass帆课. 版权所有。</p>
+        </div>
+    </footer>
+
+    <script>
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 80) {
+                navbar.classList.add('nav-transparent');
+            } else {
+                navbar.classList.remove('nav-transparent');
+            }
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start',
+                        inline: 'nearest'
+                    });
+                    // 关闭移动端菜单
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    if (mobileMenu.classList.contains('active')) {
+                        mobileMenu.classList.remove('active');
+                        document.getElementById('menu-btn').classList.remove('active');
+                    }
+                }
+            });
+        });
+
+        // 移动端菜单控制
+        document.getElementById('menu-btn').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('active');
+            this.classList.toggle('active');
+        });
+
+        // 表单验证
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 这里可以添加表单提交逻辑
+            alert('感谢您的留言！我们将尽快与您联系。');
+            this.reset();
+        });
+
+        // 添加页面加载动画
+        window.addEventListener('load', function() {
+            document.body.classList.add('loaded');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI作业批改原型 - 作业详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="flex h-screen bg-gray-100">
+
+    <!-- 左侧导航栏 -->
+    <div class="w-64 bg-white shadow-md">
+        <div class="p-4 border-b">
+            <div class="flex items-center space-x-2">
+                <div class="bg-[#165DFF] text-white h-10 w-10 rounded-lg flex items-center justify-center">
+                    <i class="fa fa-book text-xl"></i>
+                </div>
+                <div class="flex items-end justify-between w-full">
+                    <h1 class="text-xl font-bold text-[#165DFF]">FineClass帆课</h1>
+                    <p class="text-xs text-gray-500">教师端</p>
+                </div>
+            </div>
+        </div>
+        <nav class="mt-4">
+            <a href="homepage.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-graduation-cap mr-3"></i>我的课程
+            </a>
+            <a href="#" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-chalkboard-teacher mr-3"></i>开始上课
+            </a>
+            <a href="#" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-bell mr-3"></i>通知
+            </a>
+        </nav>
+    </div>
+
+    <!-- 右侧主面板 -->
+    <div class="flex-1 flex flex-col">
+        <!-- 面包屑导航 -->
+        <header class="bg-white shadow-sm p-4">
+            <nav class="text-sm text-gray-500">
+                <a href="homepage.html" class="hover:underline">我的课程</a> &gt;
+                <a href="course_details.html" class="hover:underline">[课程名称 (班级班号)]</a> &gt;
+                <span class="font-semibold text-gray-700">[作业名称]</span>
+            </nav>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button class="py-2 px-4 text-sm font-medium text-gray-700 border-b-2 border-blue-500">学生作业列表</button>
+                <button class="py-2 px-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">整体作业情况</button>
+            </div>
+
+            <!-- Content area based on selected tab -->
+            <div id="student-list-content">
+                <!-- 学生作业列表内容将在这里 -->
+                <!-- 顶部筛选和批量操作区域 -->
+                <div class="flex justify-between items-center mb-4">
+                    <!-- 左侧筛选条件 -->
+                    <div class="flex items-center space-x-4">
+                        <label for="submission-status-filter" class="text-sm text-gray-600">提交状态:</label>
+                        <select id="submission-status-filter" class="border border-gray-300 rounded-md p-1 text-sm">
+                            <option value="all">全部</option>
+                            <option value="submitted">已提交</option>
+                            <option value="not-submitted">未提交</option>
+                            <option value="late-submitted">逾期提交</option>
+                        </select>
+                        <!-- 添加分数区间筛选 -->
+                        <label for="score-range-filter" class="text-sm text-gray-600">分数区间:</label>
+                        <select id="score-range-filter" class="border border-gray-300 rounded-md p-1 text-sm">
+                            <option value="all">全部</option>
+                            <option value="below60">60分以下</option>
+                            <option value="60-70">60-70</option>
+                            <option value="71-80">71-80</option>
+                            <option value="81-90">81-90</option>
+                            <option value="91-100">91-100</option>
+                        </select>
+                        <!-- 可以添加更多筛选条件，如学号/姓名搜索 -->
+                        <input type="text" placeholder="按姓名或学号搜索" class="border border-gray-300 rounded-md p-1 text-sm">
+                    </div>
+                    <!-- 右侧批量发放结果反馈按钮 -->
+                    <div>
+                        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                            <i class="fas fa-paper-plane mr-2"></i>批量发放结果反馈
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 学生作业列表 -->
+                <div id="student-assignment-list" class="bg-white rounded-lg shadow-md p-4">
+                    <!-- 列表头部 -->
+                    <div class="flex items-center justify-between border-b pb-3 mb-3 font-semibold text-gray-700">
+                        <div class="flex-1 mr-4">学生姓名/学号</div>
+                        <div class="w-24 text-center">提交状态</div>
+                        <div class="w-24 text-center">批改分数</div>
+                        <div class="w-24 text-center"> 操作</div>
+                    </div>
+
+                    <!-- 学生列表项 (示例数据) -->
+                    <!-- 正常提交 -->
+                    <div class="flex items-center justify-between border-b pb-3 mb-3 last:border-b-0 last:pb-0">
+                        <div class="flex-1 mr-4">
+                            <p class="text-gray-800 font-semibold">张三 (20230001)</p>
+                        </div>
+                        <div class="w-24 text-center">
+                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">正常提交</span>
+                        </div>
+                        <div class="w-24 text-center">
+                            <span class="text-gray-800">95</span>
+                        </div>
+                        <div class="w-24 text-right">
+                            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">进入批改</button>
+                        </div>
+                    </div>
+
+                    <!-- 逾期提交 -->
+                    <div class="flex items-center justify-between border-b pb-3 mb-3 last:border-b-0 last:pb-0">
+                        <div class="flex-1 mr-4">
+                            <p class="text-gray-800 font-semibold">李四 (20230002)</p>
+                        </div>
+                        <div class="w-24 text-center">
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded">逾期提交</span>
+                        </div>
+                        <div class="w-24 text-center">
+                            <span class="text-gray-800">80</span>
+                        </div>
+                        <div class="w-24 text-right">
+                            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">进入批改</button>
+                        </div>
+                    </div>
+
+                    <!-- 未提交 -->
+                    <div class="flex items-center justify-between border-b pb-3 mb-3 last:border-b-0 last:pb-0">
+                        <div class="flex-1 mr-4">
+                            <p class="text-gray-800 font-semibold">王五 (20230003)</p>
+                        </div>
+                        <div class="w-24 text-center">
+                            <span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded">未提交</span>
+                        </div>
+                        <div class="w-24 text-center">
+                            <span class="text-gray-500">--</span>
+                        </div>
+                        <div class="w-24 text-right">
+                            <button class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-1 px-3 rounded text-sm">通知提醒</button>
+                        </div>
+                    </div>
+
+                    <!-- 已批改 -->
+                     <div class="flex items-center justify-between border-b pb-3 mb-3 last:border-b-0 last:pb-0">
+                        <div class="flex-1 mr-4">
+                            <p class="text-gray-800 font-semibold">赵六 (20230004)</p>
+                        </div>
+                        <div class="w-24 text-center">
+                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">正常提交</span>
+                        </div>
+                        <div class="w-24 text-center">
+                            <span class="text-gray-800">90</span>
+                        </div>
+                        <div class="w-24 text-right">
+                            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">已复核</button>
+                        </div>
+                    </div>
+
+                    <!-- 可以添加更多学生列表项 -->
+                </div>
+            </div>
+
+            <div id="overview-content" class="hidden">
+                <!-- 整体作业情况内容将在这里 -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">作业整体情况概览</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- 提交率 (饼图占位符) -->
+                        <div class="md:col-span-1 p-4 bg-gray-50 rounded-md flex flex-col items-center justify-center h-48">
+                             <p class="text-sm text-gray-600 mb-2">提交率</p>
+                             <div class="w-32 h-32 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 text-xs">饼图占位符</div>
+                             <div class="mt-2 text-sm text-gray-700">
+                                <p>正常提交: [人数] ([比例])</p>
+                                <p>逾期提交: [人数] ([比例])</p>
+                                <p>未提交: [人数] ([比例])</p>
+                             </div>
+                        </div>
+                        <!-- 成绩分布 (柱状图占位符) -->
+                        <div class="md:col-span-2 bg-gray-50 rounded-md p-4 h-64 relative">
+                            <h4 class="text-base font-semibold mb-2">成绩分布</h4>
+                            <div class="flex h-48 items-end border-l border-b border-gray-400 relative">
+                                 <!-- Y轴标签 -->
+                                 <div class="absolute -left-8 top-0 bottom-0 flex flex-col justify-between text-xs text-gray-600">
+                                     <span>100%</span>
+                                     <span>75%</span>
+                                     <span>50%</span>
+                                     <span>25%</span>
+                                     <span>0%</span>
+                                 </div>
+                                 <!-- Y轴单位 -->
+                                 <div class="absolute -left-16 top-1/2 transform -translate-y-1/2 text-sm text-gray-700 rotate-90 whitespace-nowrap"></div>
+
+                                 <!-- X轴标签和柱子容器 -->
+                                 <div class="flex flex-grow h-full items-end">
+                                    <!-- 分数区间柱子 (模拟数据) -->
+                                    <div class="flex-1 h-full flex flex-col justify-end items-center px-1">
+                                        <div class="score-bar w-4 bg-blue-500 hover:bg-blue-700 cursor-pointer" style="height: 10%;" data-range="below60" title="60分以下: 10%"></div>
+                                        <span class="text-xs text-gray-600 mt-1">0-60</span>
+                                    </div>
+                                     <div class="flex-1 h-full flex flex-col justify-end items-center px-1">
+                                        <div class="score-bar w-4 bg-blue-500 hover:bg-blue-700 cursor-pointer" style="height: 15%;" data-range="60-70" title="60-70分: 15%"></div>
+                                        <span class="text-xs text-gray-600 mt-1">60-70</span>
+                                    </div>
+                                     <div class="flex-1 h-full flex flex-col justify-end items-center px-1">
+                                        <div class="score-bar w-4 bg-blue-500 hover:bg-blue-700 cursor-pointer" style="height: 25%;" data-range="71-80" title="71-80分: 25%"></div>
+                                        <span class="text-xs text-gray-600 mt-1">71-80</span>
+                                    </div>
+                                     <div class="flex-1 h-full flex flex-col justify-end items-center px-1">
+                                        <div class="score-bar w-4 bg-blue-500 hover:bg-blue-700 cursor-pointer" style="height: 30%;" data-range="81-90" title="81-90分: 30%"></div>
+                                        <span class="text-xs text-gray-600 mt-1">81-90</span>
+                                    </div>
+                                     <div class="flex-1 h-full flex flex-col justify-end items-center px-1">
+                                        <div class="score-bar w-4 bg-blue-500 hover:bg-blue-700 cursor-pointer" style="height: 20%;" data-range="91-100" title="91-100分: 20%"></div>
+                                        <span class="text-xs text-gray-600 mt-1">91-100</span>
+                                    </div>
+                                 </div>
+                            </div>
+                            <!-- X轴单位 -->
+                            <div class="text-center text-sm text-gray-700 mt-2">得分百分比 (%)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 题目正确率模块 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">题目情况</h3>
+                    <div id="question-list">
+                        <!-- 题目列表项 (示例数据) -->
+                        <!-- 客观题 -->
+                        <div class="mb-4 pb-4 border-b last:border-b-0 last:mb-0">
+                            <div class="flex items-center justify-between">
+                                <!-- 左侧标题 -->
+                                <div class="flex-1 mr-4">
+                                    <p class="text-gray-800 font-semibold">Q1: 选择正确的选项</p>
+                                </div>
+                                <!-- 中间学生得分率 -->
+                                <div class="w-24 text-center">
+                                    <span class="text-gray-800">85%</span> <!-- 可以显示正确率或平均得分 -->
+                                </div>
+                                <!-- 右侧AI分析 -->
+                                <div class="w-48 text-right">
+                                     <button class="ai-analysis-toggle text-blue-600 hover:underline text-sm flex items-center justify-end w-full">
+                                         <span>AI分析</span>
+                                         <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                                     </button>
+                                </div>
+                            </div>
+                            <!-- AI分析详情 (默认隐藏) -->
+                            <div class="ai-analysis-detail mt-2 p-2 bg-gray-100 rounded-md text-sm text-gray-700 hidden">
+                                [AI 对 Q1 的分析详情 Placeholder: 例如，大多数学生在概念理解上存在问题。]
+                            </div>
+                        </div>
+
+                        <!-- 主观题 -->
+                         <div class="mb-4 pb-4 border-b last:border-b-0 last:mb-0">
+                            <div class="flex items-center justify-between">
+                                <!-- 左侧标题 -->
+                                <div class="flex-1 mr-4">
+                                    <p class="text-gray-800 font-semibold">Q2: 简述本章重点</p>
+                                </div>
+                                <!-- 中间学生得分率 -->
+                                <div class="w-24 text-center">
+                                    <span class="text-gray-800">70%</span> <!-- 可以显示平均得分 -->
+                                </div>
+                                <!-- 右侧AI分析 -->
+                                <div class="w-48 text-right">
+                                     <button class="ai-analysis-toggle text-blue-600 hover:underline text-sm flex items-center justify-end w-full">
+                                         <span>AI分析</span>
+                                         <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                                     </button>
+                                </div>
+                            </div>
+                            <!-- AI分析详情 (默认隐藏) -->
+                            <div class="ai-analysis-detail mt-2 p-2 bg-gray-100 rounded-md text-sm text-gray-700 hidden">
+                                [AI 对 Q2 的分析详情 Placeholder: 例如，部分学生回答不够深入，未能涵盖所有重点。]
+                            </div>
+                        </div>
+
+                        <!-- 可以添加更多题目列表项 -->
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 获取当前作业信息
+        function getAssignmentInfo() {
+            // 从URL参数中获取作业ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const assignmentId = urlParams.get('id');
+            
+            // 这里可以添加获取作业信息的API调用
+            // 目前使用模拟数据
+            return {
+                id: assignmentId,
+                title: "第一周作业",
+                courseName: "高等数学",
+                classCode: "2023级1班",
+                publishDate: "2023-10-28",
+                deadline: "2023-11-05",
+                status: "待批改"
+            };
+        }
+
+        // 更新页面标题和面包屑
+        function updatePageInfo() {
+            const assignment = getAssignmentInfo();
+            document.title = `AI作业批改原型 - ${assignment.title}`;
+            
+            // 更新面包屑中的课程名称和作业名称
+            const courseLink = document.querySelector('header nav a:nth-child(2)');
+            const assignmentTitle = document.querySelector('header nav span:last-child');
+            
+            courseLink.textContent = `${assignment.courseName} (${assignment.classCode})`;
+            assignmentTitle.textContent = assignment.title;
+        }
+
+        // 标签切换功能
+        const studentListButton = document.querySelector('.flex.border-b button:nth-child(1)');
+        const overviewButton = document.querySelector('.flex.border-b button:nth-child(2)');
+        const studentListContent = document.getElementById('student-list-content');
+        const overviewContent = document.getElementById('overview-content');
+
+        function switchTab(activeTab) {
+            // 移除所有按钮的激活状态
+            studentListButton.classList.remove('border-blue-500', 'text-gray-700', 'font-semibold', 'border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            studentListButton.classList.add('py-2', 'px-4', 'text-sm', 'font-medium');
+
+            overviewButton.classList.remove('border-blue-500', 'text-gray-700', 'font-semibold', 'border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            overviewButton.classList.add('py-2', 'px-4', 'text-sm', 'font-medium');
+
+            // 隐藏所有内容
+            studentListContent.classList.add('hidden');
+            overviewContent.classList.add('hidden');
+
+            // 激活选中的标签和显示对应内容
+            if (activeTab === 'student-list') {
+                studentListButton.classList.add('text-gray-700', 'border-b-2', 'border-blue-500');
+                studentListContent.classList.remove('hidden');
+            } else if (activeTab === 'overview') {
+                overviewButton.classList.add('text-gray-700', 'border-b-2', 'border-blue-500');
+                overviewContent.classList.remove('hidden');
+            }
+        }
+
+        // 添加标签切换事件监听
+        studentListButton.addEventListener('click', () => switchTab('student-list'));
+        overviewButton.addEventListener('click', () => switchTab('overview'));
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePageInfo();
+            
+            // 从 URL 参数中获取要显示的标签页
+            const urlParams = new URLSearchParams(window.location.search);
+            const tab = urlParams.get('tab');
+            
+            // 根据 URL 参数切换标签页，如果没有参数则默认显示学生列表
+            if (tab === 'statistics') {
+                switchTab('overview');
+            } else {
+                switchTab('student-list');
+            }
+        });
+
+        // 整体作业情况标签页的交互逻辑
+        // AI分析展开/折叠功能
+        document.querySelectorAll('.ai-analysis-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const detail = button.closest('.border-b').querySelector('.ai-analysis-detail');
+                const icon = button.querySelector('i.fas');
+                detail.classList.toggle('hidden');
+                icon.classList.toggle('fa-chevron-down');
+                icon.classList.toggle('fa-chevron-up');
+            });
+        });
+
+        // 柱状图点击跳转和筛选
+        document.querySelectorAll('.score-bar').forEach(bar => {
+            bar.addEventListener('click', () => {
+                const scoreRange = bar.dataset.range;
+                alert(`模拟：点击了 ${scoreRange} 分数区间的柱状图，将切换到学生列表页并应用筛选。`);
+                // 切换到学生列表标签页
+                switchTab('student-list');
+                // 在这里添加根据 scoreRange 过滤学生列表的实际逻辑
+                console.log(`Filtering student list by score range: ${scoreRange}`);
+            });
+        });
+
+        // 作业卡片点击事件
+        document.querySelectorAll('.assignment-card').forEach(card => {
+            card.addEventListener('click', () => {
+                // 获取作业信息（这里使用模拟数据，实际应该从卡片数据中获取）
+                const assignmentTitle = card.querySelector('p.text-gray-900').textContent;
+                const assignmentId = assignmentTitle.replace(/[^0-9]/g, ''); // 简单地从标题中提取数字作为ID
+                
+                // 跳转到作业详情页面
+                window.location.href = `assignment_details.html?id=${assignmentId}`;
+            });
+        });
+
+        // 学生作业列表中的按钮点击事件（进入批改/查看详情）
+        document.querySelectorAll('#student-assignment-list button').forEach(button => {
+            button.addEventListener('click', () => {
+                // 在这里获取对应的学生ID和作业ID (目前使用模拟数据)
+                const studentId = '[学生ID]'; // 示例学生ID
+                const assignmentId = getAssignmentInfo().id; // 从作业详情页获取当前作业ID
+                
+                // 跳转到作业批改页面
+                window.location.href = `assignment_grading.html?assignmentId=${assignmentId}&studentId=${studentId}`;
+            });
+        });
+
+    </script>
+
+</body>
+</html> 

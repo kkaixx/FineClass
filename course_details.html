@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI作业批改原型 - 课程详情</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="flex h-screen bg-gray-100">
+
+    <!-- 左侧导航栏 -->
+    <div class="w-64 bg-white shadow-md">
+        <div class="p-4 border-b">
+            <div class="flex items-center space-x-2">
+                <div class="bg-[#165DFF] text-white h-10 w-10 rounded-lg flex items-center justify-center">
+                    <i class="fa fa-book text-xl"></i>
+                </div>
+                <div class="flex items-end justify-between w-full">
+                    <h1 class="text-xl font-bold text-[#165DFF]">FineClass帆课</h1>
+                    <p class="text-xs text-gray-500">教师端</p>
+                </div>
+            </div>
+        </div>
+        <nav class="mt-4">
+            <a href="homepage.html" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-graduation-cap mr-3"></i>我的课程
+            </a>
+             <a href="#" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                <i class="fas fa-chalkboard-teacher mr-3"></i>开始上课
+            </a>
+            <a href="#" class="flex items-center py-2 px-4 text-gray-700 hover:bg-gray-200">
+                 <i class="fas fa-bell mr-3"></i>通知
+            </a>
+            <!-- 其他可能的导航项 -->
+        </nav>
+    </div>
+
+    <!-- 右侧主面板 (Course Details) -->
+    <div class="flex-1 flex flex-col">
+        <!-- 面包屑导航 (Course Details) -->
+        <header class="bg-white shadow-sm p-4">
+            <nav class="text-sm text-gray-500">
+                <a href="homepage.html" class="hover:underline">我的课程</a> &gt;
+                <span class="font-semibold text-gray-700">[课程名称 (班级班号)]</span>
+            </nav>
+        </header>
+
+        <!-- 主内容区域 (Course Details) -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            <!-- Tabs for 作业 and 课件 -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button class="py-2 px-4 text-sm font-medium text-gray-700 border-b-2 border-blue-500">课程作业</button>
+                <button class="py-2 px-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">课堂纪要</button>
+                <button class="py-2 px-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">问题库</button>
+            </div>
+
+            <!-- Content area based on selected tab -->
+            <div id="assignment-content">
+                <!-- 作业卡片布局 -->
+                <div class="flex items-center mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 flex-grow">
+                        <!-- 创建作业按钮 -->
+                        <div id="create-assignment-button" class="flex-none w-full border-2 border-dashed border-gray-400 rounded-lg flex flex-col items-center justify-center text-gray-600 cursor-pointer hover:border-blue-500 hover:text-blue-600 p-4">
+                             <i class="fas fa-plus-circle text-2xl mb-2"></i>
+                             <p class="text-sm">创建作业</p>
+                        </div>
+
+                        <!-- 第十周作业 -->
+                        <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                            <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                 <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第十周作业</p>
+                                 <div class="absolute top-4 right-4 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">未截止</div>
+                                 <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                     <p>发布: 2023-11-22</p>
+                                     <p>截止: 2023-11-29</p>
+                                 </div>
+                                 <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                     18人未提交
+                                 </div>
+                            </div>
+                        </div>
+                        <!-- 第九周作业 -->
+                        <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                            <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                 <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第九周作业</p>
+                                 <div class="absolute top-4 right-4 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">待批改</div>
+                                 <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                     <p>发布: 2023-11-19</p>
+                                     <p>截止: 2023-11-26</p>
+                                 </div>
+                                 <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                     12人未提交
+                                 </div>
+                            </div>
+                        </div>
+                        <!-- 第八周作业 -->
+                        <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                            <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                 <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第八周作业</p>
+                                 <div class="absolute top-4 right-4 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">已批改</div>
+                                 <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                     <p>发布: 2023-11-15</p>
+                                     <p>截止: 2023-11-22</p>
+                                 </div>
+                                 <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                     已全部提交
+                                 </div>
+                            </div>
+                        </div>
+                        <!-- 第七周作业 -->
+                        <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                            <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                 <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第七周作业</p>
+                                 <div class="absolute top-4 right-4 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">未截止</div>
+                                 <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                     <p>发布: 2023-11-12</p>
+                                     <p>截止: 2023-11-19</p>
+                                 </div>
+                                 <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                     20人未提交
+                                 </div>
+                            </div>
+                        </div>
+                        <!-- 第六周作业 -->
+                        <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                            <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                 <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第六周作业</p>
+                                 <div class="absolute top-4 right-4 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">待批改</div>
+                                 <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                     <p>发布: 2023-11-08</p>
+                                     <p>截止: 2023-11-15</p>
+                                 </div>
+                                 <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                     8人未提交
+                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 更多作业箭头 -->
+                    <div id="next-assignment-page" class="flex-none w-12 flex items-center justify-center cursor-pointer" title="点击查看更多作业">
+                        <i class="fas fa-chevron-circle-right text-gray-500 text-2xl hover:text-gray-700"></i>
+                    </div>
+                </div>
+
+                <!-- 隐藏的作业卡片 -->
+                <div id="hidden-assignments" class="hidden">
+                    <div class="flex items-center mb-6">
+                        <!-- 返回箭头 -->
+                        <div id="prev-assignment-page" class="flex-none w-12 flex items-center justify-center cursor-pointer" title="返回上一页">
+                            <i class="fas fa-chevron-circle-left text-gray-500 text-2xl hover:text-gray-700"></i>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 flex-grow">
+                            <!-- 第五周作业 -->
+                            <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                                <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                     <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第五周作业</p>
+                                     <div class="absolute top-4 right-4 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">未截止</div>
+                                     <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                         <p>发布: 2023-11-05</p>
+                                         <p>截止: 2023-11-12</p>
+                                     </div>
+                                     <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                         15人未提交
+                                     </div>
+                                </div>
+                            </div>
+                            <!-- 第四周作业 -->
+                            <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                                <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                     <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第四周作业</p>
+                                     <div class="absolute top-4 right-4 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">已批改</div>
+                                     <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                         <p>发布: 2023-11-01</p>
+                                         <p>截止: 2023-11-08</p>
+                                     </div>
+                                     <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                         已全部提交
+                                     </div>
+                                </div>
+                            </div>
+                            <!-- 第三周作业 -->
+                            <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                                <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                     <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第三周作业</p>
+                                     <div class="absolute top-4 right-4 bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">未截止</div>
+                                     <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                         <p>发布: 2023-10-25</p>
+                                         <p>截止: 2023-11-10</p>
+                                     </div>
+                                     <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                         5人未提交
+                                     </div>
+                                </div>
+                            </div>
+                            <!-- 第二周作业 -->
+                            <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                                <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                     <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第二周作业</p>
+                                     <div class="absolute top-4 right-4 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">已批改</div>
+                                     <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                         <p>发布: 2023-10-20</p>
+                                         <p>截止: 2023-10-27</p>
+                                     </div>
+                                     <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                         已全部提交
+                                     </div>
+                                </div>
+                            </div>
+                            <!-- 第一周作业 -->
+                            <div class="assignment-card w-full bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer">
+                                <div class="relative w-full bg-white p-4 flex flex-col justify-between h-full">
+                                     <p class="text-gray-900 text-lg font-bold overflow-hidden text-ellipsis whitespace-nowrap pr-16">第一周作业</p>
+                                     <div class="absolute top-4 right-4 bg-yellow-100 text-yellow-800 text-xs font-semibold px-2.5 py-0.5 rounded flex-shrink-0">待批改</div>
+                                     <div class="text-sm text-gray-600 flex-grow flex flex-col justify-end">
+                                         <p>发布: 2023-10-28</p>
+                                         <p>截止: 2023-11-05</p>
+                                     </div>
+                                     <div class="absolute bottom-2 right-2 text-gray-600 text-sm flex-shrink-0">
+                                         10人未提交
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 作业重审请求模块 -->
+                <div class="mt-8">
+                    <h2 class="text-xl font-semibold mb-4">作业重审请求</h2>
+                    <div id="resubmission-requests-list" class="bg-white rounded-lg shadow-md p-4">
+                        <!-- 重审请求列表项 -->
+                        <div class="flex items-center justify-between border-b pb-3 mb-3 last:border-b-0 last:pb-0">
+                             <div class="flex-1 mr-4">
+                                <p class="text-gray-800 font-semibold">[学生姓名 Placeholder] ([学生学号 Placeholder])</p>
+                                <p class="text-sm text-gray-600">作业名称: [作业名称 Placeholder]</p>
+                                <p class="text-sm text-gray-600">申请日期: [申请日期 Placeholder]</p>
+                             </div>
+                             <div class="flex items-center">
+                                  <span class="bg-blue-100 text-blue-800 text-xs font-semibold mr-4 px-2.5 py-0.5 rounded">待处理</span>
+                                  <!-- 处理按钮 -->
+                                  <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm">查看请求</button>
+                             </div>
+                        </div>
+                         <div class="flex items-center justify-between border-b pb-3 mb-3 last:border-b-0 last:pb-0">
+                             <div class="flex-1 mr-4">
+                                <p class="text-gray-800 font-semibold">[学生姓名 Placeholder] ([学生学号 Placeholder])</p>
+                                <p class="text-sm text-gray-600">作业名称: [作业名称 Placeholder]</p>
+                                <p class="text-sm text-gray-600">申请日期: [申请日期 Placeholder]</p>
+                             </div>
+                             <div class="flex items-center">
+                                  <span class="bg-green-100 text-green-800 text-xs font-semibold mr-4 px-2.5 py-0.5 rounded">已处理</span>
+                                  <!-- 处理按钮 -->
+                                  <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-1 px-3 rounded text-sm">查看详情</button>
+                             </div>
+                        </div>
+                        <!-- 更多重审请求 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 课件内容区域 -->
+            <div id="courseware-content" class="hidden">
+                <!-- 课堂大纲模块 -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">课堂大纲</h2>
+                    <!-- 第一页课堂大纲 -->
+                    <div class="flex items-center space-x-4 overflow-x-hidden pb-4">
+                        <!-- 课堂大纲卡片 -->
+                        <div class="flex-none w-64 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer" onclick="window.location.href='class_details.html?id=1'">
+                            <div class="w-full h-32 bg-gray-200 flex items-center justify-center text-gray-500">
+                                缩略图
+                            </div>
+                             <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                <p class="text-sm text-gray-700">2023.11.22</p>
+                            </div>
+                        </div>
+                        <div class="flex-none w-64 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer" onclick="window.location.href='class_details.html?id=2'">
+                            <div class="w-full h-32 bg-gray-200 flex items-center justify-center text-gray-500">
+                                缩略图
+                            </div>
+                             <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                <p class="text-sm text-gray-700">2023.11.15</p>
+                            </div>
+                        </div>
+                        <div class="flex-none w-64 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer" onclick="window.location.href='class_details.html?id=3'">
+                            <div class="w-full h-32 bg-gray-200 flex items-center justify-center text-gray-500">
+                                缩略图
+                            </div>
+                             <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                <p class="text-sm text-gray-700">2023.11.08</p>
+                            </div>
+                        </div>
+                        <div class="flex-none w-64 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer" onclick="window.location.href='class_details.html?id=4'">
+                            <div class="w-full h-32 bg-gray-200 flex items-center justify-center text-gray-500">
+                                缩略图
+                            </div>
+                             <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                <p class="text-sm text-gray-700">2023.11.01</p>
+                            </div>
+                        </div>
+                        <!-- 更多课堂大纲按钮 -->
+                        <div id="next-outline-page" class="flex-none w-12 flex items-center justify-center cursor-pointer" title="点击查看更多课堂大纲">
+                            <i class="fas fa-chevron-circle-right text-gray-500 text-2xl hover:text-gray-700"></i>
+                        </div>
+                    </div>
+
+                    <!-- 隐藏的课堂大纲 -->
+                    <div id="hidden-outlines" class="hidden">
+                        <div class="flex items-center space-x-4 overflow-x-hidden pb-4">
+                            <!-- 返回箭头 -->
+                            <div id="prev-outline-page" class="flex-none w-12 flex items-center justify-center cursor-pointer" title="返回上一页">
+                                <i class="fas fa-chevron-circle-left text-gray-500 text-2xl hover:text-gray-700"></i>
+                            </div>
+                            <!-- 课堂大纲卡片 -->
+                            <div class="flex-none w-64 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer" onclick="window.location.href='class_details.html?id=5'">
+                                <div class="w-full h-32 bg-gray-200 flex items-center justify-center text-gray-500">
+                                    缩略图
+                                </div>
+                                 <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                    <p class="text-sm text-gray-700">2023.10.25</p>
+                                </div>
+                            </div>
+                            <div class="flex-none w-64 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer" onclick="window.location.href='class_details.html?id=6'">
+                                <div class="w-full h-32 bg-gray-200 flex items-center justify-center text-gray-500">
+                                    缩略图
+                                </div>
+                                 <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                    <p class="text-sm text-gray-700">2023.10.18</p>
+                                </div>
+                            </div>
+                            <div class="flex-none w-64 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer" onclick="window.location.href='class_details.html?id=7'">
+                                <div class="w-full h-32 bg-gray-200 flex items-center justify-center text-gray-500">
+                                    缩略图
+                                </div>
+                                 <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                    <p class="text-sm text-gray-700">2023.10.11</p>
+                                </div>
+                            </div>
+                            <div class="flex-none w-64 bg-white rounded-lg shadow-md overflow-hidden flex flex-col border border-gray-200 cursor-pointer" onclick="window.location.href='class_details.html?id=8'">
+                                <div class="w-full h-32 bg-gray-200 flex items-center justify-center text-gray-500">
+                                    缩略图
+                                </div>
+                                 <div class="p-2 text-center bg-gray-50 border-t border-gray-200">
+                                    <p class="text-sm text-gray-700">2023.10.04</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 课程资料模块 -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">课程资料</h2>
+                        <!-- 右侧操作按钮 -->
+                        <div>
+                             <!-- 添加章节按钮 -->
+                             <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded text-sm mr-2">
+                                 <i class="fas fa-plus mr-2"></i>添加章节
+                             </button>
+                            <!-- 上传按钮 -->
+                            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                                <i class="fas fa-upload mr-2"></i>上传资料
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="course-materials-list" class="bg-white rounded-lg shadow-md p-4">
+                        <!-- 课程资料列表 (一级/二级目录结构) -->
+
+                        <!-- 一级目录 1 -->
+                        <div class="mb-2 material-folder-item">
+                             <div class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 cursor-pointer rounded group">
+                                 <div class="flex items-center material-folder-toggle">
+                                     <!-- 目录图标 -->
+                                     <i class="fas fa-folder mr-2 text-yellow-500"></i>
+                                     <p class="text-gray-800 font-semibold">第一章 概论</p>
+                                      <!-- 展开/折叠指示图标 -->
+                                     <i class="fas fa-chevron-down ml-2 text-gray-500 group-hover:text-gray-700 transition-transform transform"></i>
+                                 </div>
+                                 <!-- 右侧操作按钮 -->
+                                 <div>
+                                     <!-- 上传文件按钮 -->
+                                     <button class="text-gray-500 hover:text-gray-700 text-sm" title="上传文件到此目录">
+                                         <i class="fas fa-plus"></i>
+                                     </button>
+                                 </div>
+                             </div>
+                             <!-- 二级目录/文件 -->
+                             <div class="ml-6 mt-1 material-nested-content">
+                                 <div class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 cursor-pointer rounded">
+                                     <div class="flex items-center">
+                                         <!-- 文件图标 -->
+                                         <i class="fas fa-file-alt mr-2 text-gray-500"></i>
+                                         <p class="text-gray-800">第一节 课程介绍.pdf</p>
+                                     </div>
+                                      <!-- 可选：文件操作按钮 -->
+                                     <div>
+                                         <button class="text-gray-500 hover:text-gray-700 text-sm">下载</button>
+                                     </div>
+                                 </div>
+                                  <div class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 cursor-pointer rounded">
+                                     <div class="flex items-center">
+                                         <!-- 文件图标 -->
+                                         <i class="fas fa-file-alt mr-2 text-gray-500"></i>
+                                         <p class="text-gray-800">第一节 教学大纲.docx</p>
+                                     </div>
+                                      <!-- 可选：文件操作按钮 -->
+                                     <div>
+                                         <button class="text-gray-500 hover:text-gray-700 text-sm">下载</button>
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+
+                        <!-- 一级目录 2 -->
+                        <div class="mb-2 material-folder-item">
+                             <div class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 cursor-pointer rounded group">
+                                 <div class="flex items-center material-folder-toggle">
+                                     <!-- 目录图标 -->
+                                     <i class="fas fa-folder mr-2 text-yellow-500"></i>
+                                     <p class="text-gray-800 font-semibold">第二章 线性方程组</p>
+                                      <!-- 展开/折叠指示图标 -->
+                                     <i class="fas fa-chevron-down ml-2 text-gray-500 group-hover:text-gray-700 transition-transform transform"></i>
+                                 </div>
+                                 <!-- 右侧操作按钮 -->
+                                 <div>
+                                     <!-- 上传文件按钮 -->
+                                     <button class="text-gray-500 hover:text-gray-700 text-sm" title="上传文件到此目录">
+                                         <i class="fas fa-plus"></i>
+                                     </button>
+                                 </div>
+                             </div>
+                             <!-- 二级目录/文件 -->
+                             <div class="ml-6 mt-1 material-nested-content hidden">
+                                 <!-- Add nested content here -->
+                                  <div class="flex items-center justify-between py-2 px-3 hover:bg-gray-100 cursor-pointer rounded">
+                                     <div class="flex items-center">
+                                         <!-- 文件图标 -->
+                                         <i class="fas fa-file-alt mr-2 text-gray-500"></i>
+                                         <p class="text-gray-800">第二章 第一节 线性方程组.pdf</p>
+                                     </div>
+                                      <!-- 可选：文件操作按钮 -->
+                                     <div>
+                                         <button class="text-gray-500 hover:text-gray-700 text-sm">下载</button>
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+
+                        <!-- 更多课程资料 (如果需要分页或加载更多) -->
+
+                        <!-- 交互逻辑说明 -->
+                        <!-- 点击一级目录标题（除加号区域）可以展开/折叠其下的二级目录或文件 -->
+                        <!-- 点击文件可以下载或预览 -->
+                        <!-- 上传按钮可以上传新的文件，并选择存放的目录 -->
+                         <!-- 点击一级目录旁的加号按钮可以上传文件到该目录 -->
+                        <!-- 点击添加章节按钮可以添加一级目录 -->
+
+                    </div>
+                </div>
+            </div>
+
+            <div id="question-bank-content" class="hidden">
+                <!-- 问题库内容 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <!-- 搜索和筛选区域 -->
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex-1 max-w-md">
+                            <div class="relative">
+                                <input type="text" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="搜索问题...">
+                                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="flex space-x-4">
+                            <select class="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="all">所有类型</option>
+                                <option value="multiple-choice">选择题</option>
+                                <option value="fill-in-the-blank">填空题</option>
+                            </select>
+                            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center">
+                                <i class="fas fa-plus mr-2"></i>新建问题
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 问题列表 -->
+                    <div class="space-y-4">
+                        <!-- 问题卡片示例 -->
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">以下哪个是正确的HTML标签？</h3>
+                                    <div class="space-y-2">
+                                        <p class="text-sm text-gray-600">A. &lt;p&gt;</p>
+                                        <p class="text-sm text-gray-600">B. &lt;div&gt;</p>
+                                        <p class="text-sm text-gray-600">C. &lt;span&gt;</p>
+                                    </div>
+                                    <div class="mt-3 flex items-center space-x-4">
+                                        <span class="text-sm text-gray-500">类型：选择题</span>
+                                        <span class="text-sm text-gray-500">使用次数：12</span>
+                                        <span class="text-sm text-gray-500">正确率：85%</span>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 填空题示例 -->
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Python是一种______编程语言。</h3>
+                                    <p class="text-sm text-gray-600">参考答案：解释型</p>
+                                    <div class="mt-3 flex items-center space-x-4">
+                                        <span class="text-sm text-gray-500">类型：填空题</span>
+                                        <span class="text-sm text-gray-500">使用次数：8</span>
+                                        <span class="text-sm text-gray-500">正确率：92%</span>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 分页 -->
+                    <div class="mt-6 flex justify-center">
+                        <nav class="flex items-center space-x-2">
+                            <button class="px-3 py-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                上一页
+                            </button>
+                            <button class="px-3 py-1 rounded-md bg-blue-500 text-white">
+                                1
+                            </button>
+                            <button class="px-3 py-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                2
+                            </button>
+                            <button class="px-3 py-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                3
+                            </button>
+                            <button class="px-3 py-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
+                                下一页
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- 新建问题模态框 -->
+    <div id="create-question-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 sm:p-8 max-w-2xl w-full mx-4 shadow-xl transform transition-all relative">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-900">新建问题</h3>
+                <button class="text-gray-400 hover:text-gray-500" onclick="hideCreateQuestionModal()" type="button">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <!-- 问题类型选择 -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">问题类型:</label>
+                <div class="flex space-x-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" class="form-radio text-blue-500" name="question-type" value="multiple-choice" checked>
+                        <span class="ml-2 text-gray-700">选择题</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" class="form-radio text-blue-500" name="question-type" value="fill-in-the-blank">
+                        <span class="ml-2 text-gray-700">填空题</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 问题内容 -->
+            <div class="mb-6">
+                <label for="question-text" class="block text-sm font-medium text-gray-700 mb-2">问题内容:</label>
+                <textarea id="question-text" class="w-full border border-gray-300 rounded-md p-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y" rows="3" placeholder="请输入问题内容..."></textarea>
+            </div>
+
+            <!-- 选择题选项 -->
+            <div id="multiple-choice-options" class="mb-6 space-y-3">
+                <label class="block text-sm font-medium text-gray-700 mb-2">选项:</label>
+                <div class="flex items-center space-x-2">
+                    <span class="text-gray-700 font-bold">A.</span>
+                    <input type="text" class="option-input w-full border border-gray-300 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="选项 A 内容">
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-gray-700 font-bold">B.</span>
+                    <input type="text" class="option-input w-full border border-gray-300 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="选项 B 内容">
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-gray-700 font-bold">C.</span>
+                    <input type="text" class="option-input w-full border border-gray-300 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="选项 C 内容">
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-gray-700 font-bold">D.</span>
+                    <input type="text" class="option-input w-full border border-gray-300 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="选项 D 内容">
+                </div>
+                <div class="mt-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">正确答案:</label>
+                    <div class="flex space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-blue-500" name="correct-answer" value="A">
+                            <span class="ml-2 text-gray-700">A</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-blue-500" name="correct-answer" value="B">
+                            <span class="ml-2 text-gray-700">B</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-blue-500" name="correct-answer" value="C">
+                            <span class="ml-2 text-gray-700">C</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-blue-500" name="correct-answer" value="D">
+                            <span class="ml-2 text-gray-700">D</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 填空题答案 -->
+            <div id="fill-in-the-blank-answer" class="mb-6 hidden">
+                <label for="blank-answer" class="block text-sm font-medium text-gray-700 mb-2">参考答案:</label>
+                <input type="text" id="blank-answer" class="w-full border border-gray-300 rounded-md p-2 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="请输入填空答案">
+            </div>
+
+            <!-- 从其他课程导入 -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">从其他课程导入:</label>
+                    <button class="text-blue-500 hover:text-blue-600 text-sm" onclick="toggleImportSection()">
+                        <i class="fas fa-chevron-down mr-1"></i>展开
+                    </button>
+                </div>
+                <div id="import-section" class="hidden space-y-4">
+                    <!-- 课程选择 -->
+                    <div>
+                        <select class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">选择课程</option>
+                            <option value="course1">高等数学 (2023级1班)</option>
+                            <option value="course2">线性代数 (2023级2班)</option>
+                            <option value="course3">Python编程 (2023级3班)</option>
+                        </select>
+                    </div>
+                    <!-- 问题列表 -->
+                    <div class="border border-gray-200 rounded-md p-3 max-h-48 overflow-y-auto">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">以下哪个是正确的HTML标签？</p>
+                                    <p class="text-xs text-gray-500">选择题</p>
+                                </div>
+                                <button class="text-blue-500 hover:text-blue-600 text-sm">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">Python是一种______编程语言。</p>
+                                    <p class="text-xs text-gray-500">填空题</p>
+                                </div>
+                                <button class="text-blue-500 hover:text-blue-600 text-sm">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部按钮 -->
+            <div class="flex justify-end space-x-3">
+                <button class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="hideCreateQuestionModal()">
+                    取消
+                </button>
+                <button class="px-4 py-2 bg-blue-500 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" onclick="saveQuestion()">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The breadcrumb "我的课程" is now a clickable link back to homepage.html
+        // So we remove the separate back button script.
+        // const backButton = document.getElementById('back-to-homepage');
+        // backButton.addEventListener('click', () => {
+        //     window.location.href = 'homepage.html';
+        // });
+
+        const assignmentButton = document.querySelector('.flex.border-b button:nth-child(1)');
+        const coursewareButton = document.querySelector('.flex.border-b button:nth-child(2)');
+        const questionBankButton = document.querySelector('.flex.border-b button:nth-child(3)');
+        const assignmentContent = document.getElementById('assignment-content');
+        const coursewareContent = document.getElementById('courseware-content');
+        const questionBankContent = document.getElementById('question-bank-content');
+
+        // Function to switch tabs
+        function switchTab(activeTab) {
+            // Remove active class from all buttons
+            assignmentButton.classList.remove('border-blue-500', 'text-gray-700', 'font-semibold', 'border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            assignmentButton.classList.add('py-2', 'px-4', 'text-sm', 'font-medium');
+
+            coursewareButton.classList.remove('border-blue-500', 'text-gray-700', 'font-semibold', 'border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            coursewareButton.classList.add('py-2', 'px-4', 'text-sm', 'font-medium');
+
+            questionBankButton.classList.remove('border-blue-500', 'text-gray-700', 'font-semibold', 'border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            questionBankButton.classList.add('py-2', 'px-4', 'text-sm', 'font-medium');
+
+            // Hide all content
+            assignmentContent.classList.add('hidden');
+            coursewareContent.classList.add('hidden');
+            questionBankContent.classList.add('hidden');
+
+            // Add active class to the clicked button and show corresponding content
+            if (activeTab === 'assignment') {
+                assignmentButton.classList.add('text-gray-700', 'border-b-2', 'border-blue-500');
+                assignmentContent.classList.remove('hidden');
+            } else if (activeTab === 'courseware') {
+                coursewareButton.classList.add('text-gray-700', 'border-b-2', 'border-blue-500');
+                coursewareContent.classList.remove('hidden');
+            } else if (activeTab === 'question-bank') {
+                questionBankButton.classList.add('text-gray-700', 'border-b-2', 'border-blue-500');
+                questionBankContent.classList.remove('hidden');
+            }
+        }
+
+        // Add click event listeners
+        assignmentButton.addEventListener('click', () => switchTab('assignment'));
+        coursewareButton.addEventListener('click', () => switchTab('courseware'));
+        questionBankButton.addEventListener('click', () => switchTab('question-bank'));
+
+        // Set initial tab to assignment
+        switchTab('assignment');
+
+        // JavaScript for Course Materials directory toggle
+        document.querySelectorAll('.material-folder-toggle').forEach(folderToggle => {
+            folderToggle.addEventListener('click', (event) => {
+                // Prevent click on the plus icon from toggling the folder
+                if (event.target.closest('button')) {
+                    return;
+                }
+
+                const nestedContent = folderToggle.closest('.material-folder-item').querySelector('.material-nested-content');
+                const toggleIcon = folderToggle.querySelector('i.fas:last-child'); // Select the chevron icon
+
+                // Toggle the hidden class on the nested content
+                nestedContent.classList.toggle('hidden');
+
+                // Update the icon based on the new state
+                if (nestedContent.classList.contains('hidden')) {
+                    toggleIcon.classList.remove('fa-chevron-up', 'rotate-180');
+                    toggleIcon.classList.add('fa-chevron-down');
+                } else {
+                    toggleIcon.classList.remove('fa-chevron-down');
+                    toggleIcon.classList.add('fa-chevron-up', 'rotate-180');
+                }
+            });
+        });
+
+        // Function to set initial icons based on hidden state for all folders
+        function initializeFolderIcons() {
+             document.querySelectorAll('.material-folder-item').forEach(folderItem => {
+                const nestedContent = folderItem.querySelector('.material-nested-content');
+                const toggleIcon = folderItem.querySelector('.material-folder-toggle i.fas:last-child'); // Select the chevron icon
+
+                if (nestedContent.classList.contains('hidden')) {
+                    toggleIcon.classList.remove('fa-chevron-up', 'rotate-180');
+                    toggleIcon.classList.add('fa-chevron-down');
+                } else {
+                     toggleIcon.classList.remove('fa-chevron-down');
+                    toggleIcon.classList.add('fa-chevron-up', 'rotate-180');
+                }
+             });
+        }
+
+        // Add event listeners for upload and add chapter buttons (placeholders)
+        document.querySelectorAll('.material-folder-item button i.fa-plus').forEach(uploadButtonIcon => {
+            uploadButtonIcon.closest('button').addEventListener('click', () => {
+                alert('模拟：点击了一级目录的上传文件按钮');
+                // Add actual file upload logic here
+            });
+        });
+
+        const addChapterButton = document.querySelector('.flex.justify-between.items-center.mb-4 button i.fa-plus').closest('button');
+        addChapterButton.addEventListener('click', () => {
+            alert('模拟：点击了添加章节按钮');
+            // Add logic to add a new chapter (一级目录) here
+        });
+
+         const uploadMaterialButton = document.querySelector('.flex.justify-between.items-center.mb-4 button i.fa-upload').closest('button');
+        uploadMaterialButton.addEventListener('click', () => {
+            alert('模拟：点击了课程资料上传按钮');
+            // Add logic to upload materials here
+        });
+
+        // 作业卡片翻页功能
+        const nextAssignmentPage = document.getElementById('next-assignment-page');
+        const prevAssignmentPage = document.getElementById('prev-assignment-page');
+        const hiddenAssignments = document.getElementById('hidden-assignments');
+        const firstPageAssignments = document.querySelector('.flex.items-center.mb-6');
+
+        // 检查是否有更多作业卡片
+        function checkMoreAssignments() {
+            const totalAssignments = document.querySelectorAll('.assignment-card').length;
+            const assignmentsPerPage = 6; // 包括创建作业按钮
+            const hasMore = totalAssignments > assignmentsPerPage;
+            
+            // 控制右箭头的显示/隐藏
+            if (nextAssignmentPage) {
+                nextAssignmentPage.style.display = hasMore ? 'flex' : 'none';
+            }
+        }
+
+        nextAssignmentPage.addEventListener('click', () => {
+            firstPageAssignments.classList.add('hidden');
+            hiddenAssignments.classList.remove('hidden');
+        });
+
+        prevAssignmentPage.addEventListener('click', () => {
+            hiddenAssignments.classList.add('hidden');
+            firstPageAssignments.classList.remove('hidden');
+        });
+
+        // 初始化时检查是否有更多作业
+        checkMoreAssignments();
+
+        // 课堂大纲翻页功能
+        const nextOutlinePage = document.getElementById('next-outline-page');
+        const prevOutlinePage = document.getElementById('prev-outline-page');
+        const hiddenOutlines = document.getElementById('hidden-outlines');
+        const firstPageOutlines = document.querySelector('.flex.items-center.space-x-4.overflow-x-hidden.pb-4');
+
+        // 检查是否有更多课堂大纲
+        function checkMoreOutlines() {
+            const totalOutlines = document.querySelectorAll('.flex-none.w-64.bg-white').length;
+            const outlinesPerPage = 4;
+            const hasMore = totalOutlines > outlinesPerPage;
+            
+            // 控制右箭头的显示/隐藏
+            if (nextOutlinePage) {
+                nextOutlinePage.style.display = hasMore ? 'flex' : 'none';
+            }
+        }
+
+        nextOutlinePage.addEventListener('click', () => {
+            firstPageOutlines.classList.add('hidden');
+            hiddenOutlines.classList.remove('hidden');
+        });
+
+        prevOutlinePage.addEventListener('click', () => {
+            hiddenOutlines.classList.add('hidden');
+            firstPageOutlines.classList.remove('hidden');
+        });
+
+        // 初始化时检查是否有更多课堂大纲
+        checkMoreOutlines();
+
+        // 作业卡片点击事件
+        document.querySelectorAll('.assignment-card').forEach(card => {
+            card.addEventListener('click', () => {
+                // 获取作业信息（这里使用模拟数据，实际应该从卡片数据中获取）
+                const assignmentTitle = card.querySelector('p.text-gray-900').textContent;
+                const assignmentId = assignmentTitle.replace(/[^0-9]/g, ''); // 简单地从标题中提取数字作为ID
+                
+                // 跳转到作业详情页面
+                window.location.href = `assignment_details.html?id=${assignmentId}`;
+            });
+        });
+
+        // 创建作业按钮点击事件
+        document.getElementById('create-assignment-button').addEventListener('click', () => {
+            window.location.href = 'assignment_publish.html';
+        });
+
+        // 问题库相关功能
+        const questionTypeSelect = document.querySelector('#question-bank-content select');
+        const searchInput = document.querySelector('#question-bank-content input[type="text"]');
+        const questionList = document.querySelector('#question-bank-content .space-y-4');
+
+        // 搜索功能
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const questions = questionList.querySelectorAll('.border');
+            
+            questions.forEach(question => {
+                const questionText = question.querySelector('h3').textContent.toLowerCase();
+                const questionType = question.querySelector('.text-gray-500').textContent.toLowerCase();
+                
+                if (questionText.includes(searchTerm) || questionType.includes(searchTerm)) {
+                    question.style.display = '';
+                } else {
+                    question.style.display = 'none';
+                }
+            });
+        });
+
+        // 类型筛选
+        questionTypeSelect.addEventListener('change', (e) => {
+            const selectedType = e.target.value;
+            const questions = questionList.querySelectorAll('.border');
+            
+            questions.forEach(question => {
+                const questionType = question.querySelector('.text-gray-500').textContent.toLowerCase();
+                
+                if (selectedType === 'all' || questionType.includes(selectedType)) {
+                    question.style.display = '';
+                } else {
+                    question.style.display = 'none';
+                }
+            });
+        });
+
+        // 新建问题相关功能
+        function showCreateQuestionModal() {
+            document.getElementById('create-question-modal').classList.remove('hidden');
+        }
+
+        function hideCreateQuestionModal() {
+            document.getElementById('create-question-modal').classList.add('hidden');
+        }
+
+        function toggleImportSection() {
+            const importSection = document.getElementById('import-section');
+            const toggleButton = importSection.previousElementSibling.querySelector('button');
+            const icon = toggleButton.querySelector('i');
+            
+            if (importSection.classList.contains('hidden')) {
+                importSection.classList.remove('hidden');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                toggleButton.innerHTML = '<i class="fas fa-chevron-up mr-1"></i>收起';
+            } else {
+                importSection.classList.add('hidden');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                toggleButton.innerHTML = '<i class="fas fa-chevron-down mr-1"></i>展开';
+            }
+        }
+
+        // 问题类型切换
+        document.querySelectorAll('input[name="question-type"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const multipleChoiceOptions = document.getElementById('multiple-choice-options');
+                const fillInTheBlankAnswer = document.getElementById('fill-in-the-blank-answer');
+                
+                if (e.target.value === 'multiple-choice') {
+                    multipleChoiceOptions.classList.remove('hidden');
+                    fillInTheBlankAnswer.classList.add('hidden');
+                } else {
+                    multipleChoiceOptions.classList.add('hidden');
+                    fillInTheBlankAnswer.classList.remove('hidden');
+                }
+            });
+        });
+
+        // 保存问题
+        function saveQuestion() {
+            // 这里添加保存问题的逻辑
+            alert('问题保存成功！');
+            hideCreateQuestionModal();
+        }
+
+        // 修改新建问题按钮点击事件
+        document.querySelector('#question-bank-content button:last-child').addEventListener('click', () => {
+            showCreateQuestionModal();
+        });
+
+        // 从其他课程导入问题
+        document.querySelectorAll('#import-section .fa-plus').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const questionCard = e.target.closest('.flex.items-center');
+                const questionText = questionCard.querySelector('p').textContent;
+                alert(`已导入问题：${questionText}`);
+            });
+        });
+
+    </script>
+
+</body>
+</html> 
